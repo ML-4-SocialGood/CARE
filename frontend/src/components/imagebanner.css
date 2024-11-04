@@ -1,0 +1,29 @@
+/**
+ * Header/nav bar styles
+ *
+ * @format
+ */
+
+  .imagebanner {
+    z-index: 1;
+    margin-top: var(--space-32);
+    margin-bottom: var(--space-64);
+    width: 100%;
+    border-radius: var(--header-border-radius);
+    position: relative;
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    
+  }
+  
+  .imagebanner_image {
+    position: relative;
+    width: 100vw;
+    height: 200px;
+    object-fit: cover;
+    z-index: 1;
+    
+  }
+  
+  

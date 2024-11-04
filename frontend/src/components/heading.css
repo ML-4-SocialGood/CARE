@@ -1,0 +1,11 @@
+/** @format */
+
+.heading1 {
+  font-size: var(--font-size-64);
+}
+
+@media only screen and (max-width: 992px) {
+  .heading1 {
+    font-size: var(--font-size-48);
+  }
+}

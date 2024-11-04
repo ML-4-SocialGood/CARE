@@ -1,0 +1,56 @@
+/** @format */
+
+.error{
+    display: flex;
+
+    flex-direction: column; 
+
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+
+}
+
+.error__container {
+  display: flex;
+  flex-direction: column;
+  padding: 0px 32px 0px 32px;
+  align-items: center;
+
+  flex-direction: column;
+  align-content: center;
+  flex-wrap: wrap;
+  line-height: 200%;
+
+
+}
+
+@media only screen and (max-width: 480px) {
+  .birdImg{
+    width: 60%;
+  }
+}
+
+
+@media all and (min-width: 481px) {
+  .birdImg{
+    width: 40%;
+  }
+}
+
+@media all and (min-width: 1000px) {
+  .birdImg{
+    width: 20%;
+  }
+}
+
+.birdImg img {
+  width: 100%;
+  height: auto;
+}
+
+
+
+.errorHeading{
+    text-align: center;
+}

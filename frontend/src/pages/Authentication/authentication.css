@@ -1,0 +1,70 @@
+/** @format */
+.signup__form__wrapper {
+  margin: var(--space-8);
+  box-sizing: border-box;
+  width: 60%;
+}
+
+.signup__form__wrapper .form__input {
+  border-bottom: 3px solid var(--colour-secondary);
+}
+
+.form__input {
+  width: 100%;
+  padding: var(--space-8);
+  margin: var(--space-8);
+  outline: none;
+  border: none;
+  background-color: transparent;
+  color: var(--colour-gray-1);
+}
+
+.auth__form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.signup__button {
+  align-self: center;
+
+  margin: var(--space-8);
+  margin-top: var(--space-32);
+}
+
+.input__box {
+  position: relative;
+}
+
+.input__box span {
+  position: absolute;
+  left: 0;
+  padding: var(--space-8);
+  pointer-events: none;
+  font-size: 1em;
+}
+
+.signup__form__container {
+  display: flex;
+  width: 100%;
+  min-height: 50vh;
+  flex-direction: column;
+  align-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.signup {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-image: var(--gradient-bg);
+  background-color: var(--colour-primary-dark);
+}
+
+::placeholder {
+  color: var(--colour-gray-1);
+  opacity: 0.5;
+}

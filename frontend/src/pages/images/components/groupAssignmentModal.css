@@ -1,0 +1,15 @@
+/** @format */
+
+.group-assign-heading {
+  margin-bottom: var(--space-16);
+}
+
+.group-assign-dropdown {
+  padding: 12px;
+  margin-bottom: var(--space-16);
+  min-width: 200px;
+}
+
+.group-assign-confirmation {
+  margin-top: var(--space-32);
+}

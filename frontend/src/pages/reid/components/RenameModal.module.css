@@ -1,0 +1,23 @@
+
+.renameModalForm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.renameInput {
+    width: 100%;
+    font-size: 1.2rem;
+    background-color: transparent;
+    color: var(--colour-secondary-dark);
+    border: solid 1px var(--colour-secondary-dark);
+    border-radius: 3px;
+    padding: 4px;
+}
+
+.renameSubmitButton {
+    padding-left: 20px;
+    padding-right: 20px;
+    background: linear-gradient(45deg, #6d977c, #f7de7b);
+    color: var(--text-colour-dark);
+}

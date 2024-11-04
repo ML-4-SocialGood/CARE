@@ -1,0 +1,118 @@
+/** @format */
+:root {
+  --modal-border-radius: calc(var(--base-unit) * 10);
+  --modal-width: 80vw;
+  --modal-min-height: 400px;
+  --modal-height: 80vh;
+}
+
+.modal {
+  width: var(--modal-width);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: var(--space-48) var(--space-24);
+  background-color: var(--colour-primary-darker);
+  border-radius: var(--modal-border-radius);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  min-height: min(var(--modal-min-height), 100vh);
+  overflow-y: auto;
+  transition: opacity 0.5s ease;
+}
+
+.modal__close-button {
+  border-radius: 50%;
+  padding: var(--space-8);
+  background: transparent;
+  position: absolute;
+  right: var(--space-24);
+  top: var(--space-24);
+
+  &:hover {
+    background: var(--colour-primary-lighter);
+  }
+}
+
+.modal__close-icon {
+  width: 30px;
+  cursor: pointer;
+}
+
+@media screen and (min-width: 768px) {
+  :root {
+    --modal-width: 700px;
+    --modal-min-height: 300px;
+  }
+}
+
+@media screen and (min-width: 993px) {
+  :root {
+    --modal-width: 900px;
+  }
+}
+
+.rename-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rename-input {
+  width: 100%;
+  font-size: 1.2rem;
+  background-color: transparent;
+  color: var(--colour-secondary-dark);
+  border: solid 1px var(--colour-secondary-dark);
+  border-radius: 3px;
+  padding: 4px;
+}
+
+.rename-submit-button {
+  padding-left: 16px;
+  padding-right: 16px;
+  background: linear-gradient(45deg, #6d977c, #f7de7b);
+  color: var(--text-colour-dark);
+}
+
+.notification-modal {
+  width: var(--modal-width);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: var(--space-48) var(--space-24);
+  background-color: var(--colour-primary-darker);
+  border-radius: var(--modal-border-radius);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  min-height: min(var(--modal-min-height), 100vh);
+  overflow-y: auto;
+  transition: opacity 0.8s ease;
+  #background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  opacity: 0.9;
+}
+
+.notification-modal.show {
+  opacity: 1; /* 透明度为 1 显示模态框 */
+}
+
+
+.button:hover {
+  background: linear-gradient(90deg, #ffcc66, #ff9900);
+  /* transform: scale(1.05); */
+  box-shadow: 0 4px 10px rgba(255, 153, 0, 0.4);
+}
+
+
+

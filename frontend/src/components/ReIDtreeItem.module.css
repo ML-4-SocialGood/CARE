@@ -1,0 +1,147 @@
+.treeItemWrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.treeItem {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+/* 包裹整个 TreeItem 的容器 */
+.treeItemContent {
+  display: flex;
+  align-items: center;
+  padding: 1px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* 如果没有子元素，展示占位符 */
+/*.treeItemIconPlaceholder {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}*/
+
+.treeItemLabel {
+  flex-grow: 10;
+  padding: 0 10px;
+}
+
+.treeItemActions {
+  display: flex;
+  gap: 1px;
+}
+
+.treeItem:hover {
+  background-color: rgba(27, 36, 24, 0.24);
+}
+
+.treeItemActive {
+  background-color: rgba(27, 36, 24, 0.24);
+}
+
+.treeItemIcon {
+  width: 16px;
+}
+
+.treeItemChild {
+  padding-left: 20px;
+}
+
+.treeItemButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 1px;
+  margin-left: 10px;
+}
+
+.treeItemActionIcon {
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  transition: transform 0.2s ease, color 0.3s ease;
+
+}
+
+/* A independent delete button style */
+.deleteButton {
+  position: relative; /* Ensure the icon is overlapped inside the button */
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: inline-block;
+}
+
+/* The parent element of the delete icon */
+.deleteIcon {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top:1px;
+  left: -3px;
+  transition: opacity 0.3s ease; /* 0.3s is the duration of the transition */
+}
+
+.defaultDeleteIcon {
+  opacity: 1; /* 0 is transparent, 1 is opaque */
+}
+
+/* The red icon is hidden by default */
+.hoverDeleteIcon {
+  opacity: 0; /* 默认隐藏红色图标 */
+}
+
+/* The default icon fades out and the red icon fades in when the mouse hovers */
+.deleteButton:hover .defaultDeleteIcon {
+  opacity: 0;
+}
+
+.deleteButton:hover .hoverDeleteIcon {
+  opacity: 1;
+}
+
+
+.rename-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rename-input {
+  width: 100%;
+  font-size: 1.2rem;
+  background-color: transparent;
+  color: var(--colour-secondary-dark);
+  border: solid 1px var(--colour-secondary-dark);
+  border-radius: 3px;
+  padding: 4px;
+}
+
+.rename-submit-button {
+  padding-left: 16px;
+  padding-right: 16px;
+  background: linear-gradient(45deg, #6d977c, #f7de7b);
+  color: var(--text-colour-dark);
+}
+
+.uploads__list__item__fileinfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.uploads__list__item__fileinfo .rename-button {
+  padding-left: 16px;
+  padding-right: 16px;
+  background: linear-gradient(45deg, #6d977c, #f7de7b);
+  color: var(--text-colour-dark);
+}
+

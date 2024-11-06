@@ -110,7 +110,7 @@ Please ensure you have the following models:
 - **`CARE_Traced.pt`:** The ReID Model file. Place it in `<project directory>/backend/ai_server`.
 
 ### Install Prerequisites
-Before installation, please make sure you have Anaconda and Node.js installed in the defaulty directory.
+Before installation, please make sure you have Anaconda, Node.js, and Chrome installed in the default directory.
 
 ### Install CARE Web Platform
 Run the following batch file to install the CARE Web Platform:  
@@ -146,7 +146,7 @@ Home Page
 ![Home Page](readme_media/CARE_Home.png "Home Page")
 
 Sign in Page  
-![Sign in Page](readme_media/CARE_Signin.png "Sing in Page")
+![Sign in Page](readme_media/CARE_Signin.png "Sign in Page")
 
 Image Uploader  
 ![Image Uploader](readme_media/CARE_Uploader.png "Image Uploader")

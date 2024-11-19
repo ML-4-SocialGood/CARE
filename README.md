@@ -153,9 +153,6 @@ Sign in Page
 Image Uploader  
 ![Image Uploader](readme_media/CARE_Uploader.png "Image Uploader")
 
-Processing Pop-up
-![Processing Pop-up](readme_media/CARE_Processing.png "Processing Pop-up")
-
 Uploaded Image Gallery
 ![Uploaded Image Gallery](readme_media/CARE_Image_Gallery.png "Uploaded Image Gallery")
 
@@ -164,9 +161,3 @@ Detection Image Gallery
 
 ReID Image Gallery  
 ![ReID Image Gallery](readme_media/CARE_ReID_Gallery.png "ReID Image Gallery")
-
-Profile Page  
-![Profile Page](readme_media/CARE_User.png "Profile Page")
-
-Admin User Management Page  
-![Admin User Management Page](readme_media/CARE_User_Manage.png "Admin User Management Page")

@@ -15,7 +15,7 @@ export const Footer = () => {
 
   return (
     <div className="footer__background">
-      <div className="footer__content">
+      {/* <div className="footer__content">
         <SiteLogo imageSrc={Logo} />
         <ul className="footer__links">
           <Link to="/about" className="footer__link">
@@ -49,7 +49,7 @@ export const Footer = () => {
             </>
           )}
         </div>
-      </div>
+      </div> */}
       <div className="line" />
       <div className="copyright">
         Copyright © 2024 Project Care. All rights reserved.

@@ -22,7 +22,7 @@ export default function Images() {
   const [confHigh, setConfHigh] = useState('1');
   const [isLoading, setIsLoading] = useState(false); // Track loading state
 
-  const labels = ['NoDetection', 'Bird', 'Cat', 'Dog', 'Hedgehog', 'Rabbit', 'Rat', 'Sheep', 'Stoat', 'Trap', 'Weka'];
+  const labels = ['No Detection', 'Bird', 'Cat', 'Dog', 'Hedgehog', 'Rabbit', 'Rat', 'Sheep', 'Stoat', 'Trap', 'Weka'];
 
   const handleSpeciesSelect = async (species) => {
     setSpecies(species);
@@ -167,19 +167,19 @@ export default function Images() {
           content={labels}
           onItemSelect={handleSpeciesSelect}
         />
-        <Button className="clear-filter-button" onClick={() => {
+        <div className="clear-filter-button" onClick={() => {
           setSpecies(null);
           setConfLow('0');
           setConfHigh('1');
-        }}>Clear Filter</Button>
+        }}>Clear Filter</div>
         {/* Download button with loading state */}
-        <Button className="download-button" onClick={handleDownload} disabled={isLoading}>
+        <div className="download-button" onClick={handleDownload} disabled={isLoading}>
           {isLoading ? (
             "Exporting..."
           ) : (
             selectedSpecies ? `Export All ${selectedSpecies}` : `Export All Images`
           )}
-        </Button>
+        </div>
       </div>
 
       {detects && detects?.length > 0 ? (

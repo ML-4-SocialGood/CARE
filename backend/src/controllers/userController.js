@@ -176,6 +176,52 @@ exports.getImagePaths = async (req, res) => {
   }
 }
 
+exports.downloadSelectedGalleryImages = async (req, res) => {
+  try {
+    const userIdFolder = req.user.id + "";
+    const baseDir = path.join(__dirname, '../../data/image_uploaded', userIdFolder);
+    const { selectedPaths } = req.body;
+
+    // Check if selectedPaths is an array and contains at least one file path
+    if (!Array.isArray(selectedPaths) || selectedPaths.length === 0) {
+      return res.status(400).send('No image paths provided.');
+    }
+
+    // Ensure the base directory exists
+    fs.ensureDirSync(baseDir);
+
+    // Set the response headers for the zip file
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename=files.zip');
+
+    const archive = archiver('zip', {
+      zlib: { level: 0 } // Sets the compression level
+    });
+
+    // Pipe archive data to the response
+    archive.pipe(res);
+
+    // Append files to the archive while maintaining the folder structure
+    for (const filePath of selectedPaths) {
+      const fullPath = path.resolve(baseDir, filePath); // Resolve the full path
+      try {
+        // Check if file exists using fs-extra
+        await fs.access(fullPath);
+        archive.file(fullPath, { name: filePath }); // Maintain folder structure in the archive
+      } catch (err) {
+        console.warn(`File not found: ${fullPath}`); // Log missing files
+      }
+    }
+
+    // Finalize the archive (i.e., finish the zipping process)
+    await archive.finalize();
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Function to get all file paths
 async function getFilePaths(dir, baseDir) {
   let results = [];

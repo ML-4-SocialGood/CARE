@@ -17,19 +17,23 @@
 
 .profile-button {
   height: 40px;
-  background: rgb(146, 163, 118);
 }
 
 .profile-button.action {
-  background: linear-gradient(45deg, #152019, #d3c698);;
-  color: var(--text-colour-light);
-
-  &:hover {
-    background-color: var(--colour-primary);
-  }
+  color: var(--text-colour-dark);
 }
 
-.button-primary.profile-button,
+.button-primary.profile-button {
+  border-radius: none;
+  font-weight: normal;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  letter-spacing: 1px;
+  margin-top: var(--space-24);
+  font-weight: normal;
+}
+
 .button.profile-button {
   border-radius: none;
   font-weight: normal;

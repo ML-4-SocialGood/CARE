@@ -16,17 +16,9 @@
 
 .uploads-h1 {
   margin-top: var(--space-24);
-  font-size: var(--font-size-40);
+  font-size: var(--font-size-48);
 }
 
-.uploads-h1 {
-  font-size: 140px;
-  margin-top: var(--space-24);
- font-family: 'Arial', sans-serif;
-  background: linear-gradient(45deg, #8fb69e, #f7de7b);
- -webkit-background-clip: text;
-  color: transparent; /* 让背景渐变色作为文字的颜色 */
-}
 .uploads-list {
   width: 100%;
   max-width: 100%;
@@ -60,9 +52,9 @@
   }
 }
 
-@media screen and (min-width: 768px) {
+@media screen and (max-width: 992px) {
   .uploads-h1 {
-    font-size: var(--font-size-48);
+    font-size: var(--font-size-40);
     margin-top: var(--space-40);
   }
 }
@@ -85,12 +77,12 @@
 }
 
 .paginationBttns .page-num:hover {
-  background: linear-gradient(45deg, #a3b7ab, #fbeebb);
+  background: linear-gradient(90deg, #ffcc66, #ff9900);
   color: #fff;
 }
 
 .paginationBttns .active{
-  background: linear-gradient(45deg, #6d977c, #f7de7b);
+  background: var(--colour-secondary-darker);
   color: #fff;
 }
 
@@ -101,7 +93,7 @@
   row-gap: 20px;
   column-gap: 20px;
   width: 100%;
-  padding-top: 40px;
+  padding-top: 20px;
   padding-left: 16px;
   padding-right: 16px;
   padding-bottom: 40px;
@@ -138,13 +130,6 @@
   flex-direction: column;
 }
 
-.uploads-file-list > ul {
-  flex: 1;
-  overflow-y: auto;
-  padding-left: 0;
-  margin: 0;
-}
-
 .uploads-file-list .uploads {
   width: auto;
   margin-top: 0;
@@ -169,8 +154,7 @@
 
 .uploads-file-list .uploads__list__item_title {
   padding-bottom: 16px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid #bbbbbb;
+  font-weight: bold;
 }
 
 .uploads-file-list .file-preview {
@@ -191,19 +175,35 @@
   accent-color: rgb(206, 213, 111); /* 选中状态的颜色 */
 }
 
+.uploads__list__header {
+  padding-left: 0;
+  overflow-y: visible;
+  padding: 0px 16px 0px;
+  border-bottom: 1px solid #bbbbbb;
+}
+
+.uploads__list__items {
+  flex: 1;
+  overflow-y: auto;
+  padding-left: 0;
+  margin: 0;
+  padding: 16px;
+  background-color: #d5d5d529;
+  border-radius: 16px;
+}
+
 /* Hover 状态 */
 .uploads-file-list .uploads__list__item:not(.uploads__list__item_title):hover {
-  background: linear-gradient(45deg, #a3b7ab, #fbeebb);
+  background: var(--colour-gray-6);
  color: var(--text-colour-dark);
  border-radius: 5px;
-   margin-top: 5px; /* 添加外边距，制造hover状态的间隔效果 */
  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* 为hover状态添加阴影效果 */
  transition: all 0.3s ease; /* 平滑过渡效果 */
   }
   
   /* Select 状态 */
   .uploads-file-list .uploads__list__item.file-name-selected {
-   background: linear-gradient(45deg, #6d977c, #f7de7b);
+   background: var(--colour-gray-4);
    color: var(--text-colour-dark);
    border-radius: 5px;
    margin-top: 0px; /* 取消hover状态的间隔 */
@@ -216,6 +216,61 @@
   background-color: rgba(0, 0.0078, 0.0039, 0.45);
   border-radius: var(--header-border-radius);
   padding: var(--space-24);
+}
+
+.preview-navigation {
+  display: flex;
+  justify-content:space-between;
+  margin-top: 10px;
+}
+
+.preview-header {
+  display: flex;
+  justify-content:space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.prev-arrows {
+  margin-left: 10px;
+  padding: 10px;
+}
+
+.preview-checkbox {
+  width: 30px;
+  height: 30px;
+  accent-color: rgb(206, 213, 111);
+}
+
+.download_button {
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  margin-right: 30px;
+}
+
+.downloadIcon{
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  top: 1px;
+  left: 0px;
+  transition: opacity 0.3s ease; /* 0.3s is the duration of the transition */
+}
+
+.download_button:hover .downloadIcon {
+  opacity: 0;
+}
+
+.download_button:hover .downloadIconHover {
+  opacity: 1;
+}
+
+.downloadIconHover{
+  opacity: 0;
 }
 
 @media screen and (min-width: 1024px) {
@@ -233,11 +288,9 @@
 .uploads-preview__title {
   white-space: pre-wrap;
   word-break: break-all;
-  margin-top: 16px;
 }
 
 .uploads-preview__close-button {
-  background: linear-gradient(45deg, #6d977c, #f7de7b);
   color: var(--text-colour-dark);
 }
 
@@ -252,7 +305,7 @@
 
 .uploads-file-list-warning {
   margin-top: var(--space-24);
-  font-size: var(--font-size-40);
+  font-size: var(--font-size-32);
   text-align: center;
   color: rgb(189, 165, 128);
   overflow-y: auto;
@@ -291,16 +344,23 @@
 }
 
 .downloadSelected-button {
-  background: linear-gradient(45deg, #6d977c, #f7de7b);
-  color: var(--text-colour-dark);
   margin: 0 auto;
   display: flex;
   margin-bottom: 10px;
 }
 
+.heading-buttons {
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-left: 40px;
+}
+
+.heading-buttons-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .analyse-button {
-  background: linear-gradient(45deg, #6d977c, #f7de7b);
-  color: var(--text-colour-dark);
   margin: 0 auto;
   display: flex;
 }
@@ -332,8 +392,6 @@
 
 .paginationNumberChangeButton {
   width: 0;
-  background: linear-gradient(45deg, #6d977c, #f7de7b);
-  color: var(--text-colour-dark);
 }
 
 .rename-modal-form {

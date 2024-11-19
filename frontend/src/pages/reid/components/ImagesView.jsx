@@ -29,7 +29,22 @@ export default function ImagesView({ detects: initialDetects }) {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
 
+  const itemsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageCount = Math.ceil(files.length / itemsPerPage);
 
+  const [inputPage, setInputPage] = useState("1");
+
+  const currentItems = files.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
+
+  const changePage = ({ selected }) => {
+    setCurrentPage(selected);
+    setInputPage((selected + 1).toString());
+    handlePreview(files[(selected)*itemsPerPage], files);
+  };
 
   useEffect(() => {
     if (!currentFolder) return;
@@ -67,6 +82,10 @@ export default function ImagesView({ detects: initialDetects }) {
         uniqueFiles.push(item);
       })
 
+      if (uniqueFiles.length != 0) {
+        handlePreview(uniqueFiles[0], uniqueFiles);
+      }
+
       setFiles(uniqueFiles);
       } catch (error) {
         console.error('Error fetching files:', error);
@@ -76,7 +95,7 @@ export default function ImagesView({ detects: initialDetects }) {
     fetchFiles();
   }, [currentFolder, detects]);
 
-  const handlePreview = async (file) => {
+  const handlePreview = async (file, files) => {
     const response = await apiClient(
       `/api/users/detect_images/view?date=${file.realDate}&imagePath=${file.realPath}`,
       {
@@ -89,6 +108,7 @@ export default function ImagesView({ detects: initialDetects }) {
       path: file.path,
       name: file.name,
       src: URL.createObjectURL(data),
+      index: files.indexOf(file),
     });
   };
 
@@ -388,7 +408,10 @@ export default function ImagesView({ detects: initialDetects }) {
   return (
     <div className="uploads-view">
       <div className="uploads-folder-list">
-        <TreeView onSelectedChange={(itemId) => setCurrentFolder(itemId)}>
+      <TreeView onSelectedChange={(itemId) => {
+          setCurrentFolder(itemId);
+          setPreview(null);
+          }}>
           <TreeList
               folders={detects}
               level={1}
@@ -401,36 +424,40 @@ export default function ImagesView({ detects: initialDetects }) {
       <div className="uploads-file-list">
         {currentFolder ? (
           <PaginateItems
-            itemsPerPage={10}
+            itemsPerPage={itemsPerPage}
             files={currentFiles}
             selected={selected}
             setSelected={setSelected}
             preview={preview}
             handlePreview={handlePreview}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            pageCount={pageCount}
+            currentItems={currentItems}
+            changePage={changePage}
+            inputPage={inputPage}
+            setInputPage={setInputPage}
+            setPreview={setPreview}
           />
         ) : (
           <div className="uploads-file-list-warning">You can check your ReID results here. <br></br>Please select a folder from the folder tree.</div>
         )}
       </div>
       {preview && (
-        <div className="uploads-preview">
-          <div className="uploads-preview__header">
-            <Button
-              className="uploads-preview__close-button"
-              onClick={() => {
-                setPreview(null);
-              }}
-            >
-              <img
-                alt="Close preview"
-                className="uploads-preview__close-icon"
-                src={closeIcon}
-              />
-            </Button>
-          </div>
-          <Heading level={2} className="uploads-preview__title">{preview.name}</Heading>
-          <img src={preview.src} className="primary-preview" />
-        </div>
+        <Preview
+          files={currentFiles}
+          preview={preview}
+          handlePreview={handlePreview}
+          setPreview={setPreview}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          changePage={changePage}
+          inputPage={inputPage}
+          setInputPage={setInputPage}
+          selected={selected}
+          setSelected={setSelected}
+        />
       )}
       {showDeleteModal &&
           createPortal(
@@ -562,22 +589,16 @@ function PaginateItems({
   setSelected,
   preview,
   handlePreview,
+  currentPage,
+  setCurrentPage,
+  pageCount,
+  currentItems,
+  changePage,
+  inputPage,
+  setInputPage,
+  setPreview,
+  handleDownload,
 }) {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [inputPage, setInputPage] = useState('1');
-
-  const pageCount = Math.ceil(files.length / itemsPerPage);
-
-  const currentItems = files.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
-
-  const changePage = ({ selected }) => {
-    setCurrentPage(selected);
-    setInputPage((selected + 1).toString());
-  };
-
   const handleInputPageChange = () => {
     const page = +inputPage;
     if (Number.isNaN(page)) {
@@ -595,6 +616,8 @@ function PaginateItems({
       setCurrentPage(page - 1);
       setInputPage(page.toString());
     }
+
+    handlePreview(files[(page-1)*itemsPerPage], files);
   }
 
   useEffect(() => {
@@ -604,7 +627,7 @@ function PaginateItems({
 
   if (currentItems.length === 0) {
     return (
-      <div className="uploads__list__item uploads__list__item_title">No files found</div>
+      <div className="uploads__list__item uploads__list__item_title uploads__list__header">No files found</div>
     );
   }
 
@@ -637,21 +660,161 @@ function PaginateItems({
         <div className="paginationNumberChangeGroup">
           <input
             className="paginationNumberChange"
-            minLength={1} type="text"
+            minLength={1}
+            type="text"
             value={inputPage}
             onChange={(event) => setInputPage(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') {
+              if (event.key === "Enter") {
                 handleInputPageChange();
               }
             }}
           />
-          <Button className="paginationNumberChangeButton" onClick={handleInputPageChange}>
+          <Button
+            className="paginationNumberChangeButton button-primary"
+            onClick={handleInputPageChange}
+          >
             Go
           </Button>
         </div>
       </div>
     </>
+  );
+}
+
+function Preview({
+  files,
+  preview,
+  handlePreview,
+  setPreview,
+  itemsPerPage,
+  currentPage,
+  setCurrentPage,
+  changePage,
+  inputPage,
+  setInputPage,
+  selected,
+  setSelected,
+}) { 
+  const curindex = preview.index;
+  const curindexmod = curindex % itemsPerPage;
+  const curPage = Math.floor(curindex / itemsPerPage) + 1;
+
+  // Function to navigate to the previous file
+  const handlePrev = () => {
+    setInputPage((curPage).toString());
+
+    if (curPage != (currentPage+1)) {
+      setCurrentPage(curPage-1);
+    }
+
+    if (files.length === 0) return;
+
+    const prevIndex = curindex > 0 ? curindex - 1 : 0;
+
+    if (curindexmod == 0 && prevIndex != 0) {
+      setCurrentPage(currentPage-1);
+    }
+    
+    handlePreview(files[prevIndex], files);
+  };
+
+  // Function to navigate to the next file
+  const handleNext = () => {
+    setInputPage((curPage).toString());
+
+    if (curPage != (currentPage+1)) {
+      setInputPage((curPage).toString());
+      setCurrentPage(curPage-1);
+    }
+
+    if (files.length === 0) return;
+
+    const nextIndex = curindex < files.length - 1 ? curindex + 1 : files.length - 1;
+
+    if (curindexmod == itemsPerPage-1 && nextIndex != files.length - 1) {
+      setCurrentPage(currentPage+1);
+    }
+    
+    handlePreview(files[nextIndex], files);
+  };
+
+  const closePrev = () => {
+    setPreview(null);
+  }
+
+  return (
+    <div className="uploads-preview">
+      <div className="uploads-preview__header">
+        <Button
+          className="uploads-preview__close-button button-primary"
+          onClick={closePrev}
+        >
+          <img
+            alt="Close preview"
+            className="uploads-preview__close-icon"
+            src={closeIcon}
+          />
+        </Button>
+      </div>
+      <div className="preview-header">
+        {/* <button
+          className="download_button"
+          onClick={(e) => {
+              e.stopPropagation();
+              onDownload(itemId); //onDownload Handle download logic
+          }}
+          >
+          <img
+              src={downloadIcon}
+              alt="Download"
+              className={"downloadIcon"}
+          />
+          <img
+              src={downloadIconOnclick}
+              alt="Download"
+              className={"downloadIcon downloadIconHover"}
+          />
+        </button> */}
+        <Heading level={2} className="uploads-preview__title">
+          {preview.name}
+        </Heading>
+      </div>
+      <img src={preview.src} className="primary-preview" />
+      <div className="preview-navigation">
+        <div
+          // className="preview-checkbox"
+          // type="checkbox"
+          // checked={selected.has(preview.path)}
+          // onChange={(event) => {
+          //   setSelected((selected) => {
+          //     const newSelected = new Set(selected);
+          //     if (event.target.checked) {
+          //       newSelected.add(preview.path);
+          //     } else {
+          //       newSelected.delete(preview.path);
+          //     }
+          //     return newSelected;
+          //   });
+          // }}
+          >
+        </div>
+        <div>
+          <Button 
+            className="button-primary prev-arrows"
+            onClick={handlePrev}
+            disabled={files.length <= 1}> 
+            Prev
+          </Button>
+          <Button 
+            className="button-primary prev-arrows"
+            onClick={handleNext}
+            disabled={files.length <= 1}> 
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -669,12 +832,13 @@ function FileItem({ files, currentItems, selected, setSelected, preview, handleP
 
   if (currentItems.length === 0) {
     return (
-      <div className="uploads__list__item uploads__list__item_title">No files found</div>
+      <div className="uploads__list__item uploads__list__item_title uploads__list__header">No files found</div>
     );
   }
 
   return (
-    <ul>
+    <>
+    <ul className="uploads__list__header">
       <li className="uploads__list__item uploads__list__item_title">
         <input
           ref={selectAllRef}
@@ -694,8 +858,15 @@ function FileItem({ files, currentItems, selected, setSelected, preview, handleP
         />
         <div className="uploads__list__item__fileinfo">Select All</div>
       </li>
+    </ul>
+    <ul className="uploads__list__items">
       {currentItems.map((file, index) => (
-        <li className={classNames("uploads__list__item", file.path === preview?.path && 'file-name-selected')} key={`${file.name}-${index}`}>
+        <li className={classNames(
+          "uploads__list__item", 
+          file.path === preview?.path && 'file-name-selected')} 
+          key={`${file.name}-${index}`}
+          onClick={() => handlePreview(file, files)}
+        >
           <input
             type="checkbox"
             checked={selected.has(file.path)}
@@ -711,9 +882,10 @@ function FileItem({ files, currentItems, selected, setSelected, preview, handleP
               });
             }}
           />
-          <span className="file-name" onClick={() => handlePreview(file)}>{file.name}</span>
+          <span className="file-name">{file.name}</span>
         </li>
       ))}
     </ul>
+    </>
   );
 }

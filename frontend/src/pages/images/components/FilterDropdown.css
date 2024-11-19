@@ -40,8 +40,7 @@
     border-radius: var(--header-border-radius);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     transition: background-color 0.3s, box-shadow 0.3s;
-;
-;
+    z-index: 1;
     /* box-shadow: 1px ; */
 }
 

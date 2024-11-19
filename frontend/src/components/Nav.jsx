@@ -3,6 +3,7 @@ import { useState, useEffect, useRef ,useContext} from "react";
 import PropTypes from "prop-types";
 import { SignOutButton, Button, SignInButton } from "./Button";
 import clsx from "clsx";
+import "./Nav.css";
 import userAvatar from "../assets/user.png";
 
 import { Link, useLocation } from "react-router-dom";
@@ -75,6 +76,12 @@ export default function NavBar() {
             ReID Gallery
         </NavLink>
 
+        <div className="vl">
+        </div>
+
+        <DropdownMenu>
+        </DropdownMenu>
+
         <Button
           ariaLabel="Profile"
           data-cy="profile"
@@ -93,12 +100,16 @@ export default function NavBar() {
       </>
     ) : (
       <>
-        <NavLink isAnchor href="#whoweare">
+        {/* <NavLink isAnchor href="#whoweare">
           Who we are
-        </NavLink>
-        <NavLink isAnchor href="#whycare">
+        </NavLink> */}
+        {/* <NavLink isAnchor href="#whycare">
           Why choose CARE?
-        </NavLink>
+        </NavLink> */}
+
+        <DropdownMenu>
+        </DropdownMenu>
+
         <SignInButton
           ariaLabel="Sign in"
           className="nav__link-button"
@@ -130,6 +141,87 @@ export default function NavBar() {
     </>
   );
 }
+
+const DropdownMenu = () => {
+  const location = useLocation();
+  const {isAuthenticated} = useContext(AuthContext);
+
+  const createLinks = () =>
+    isAuthenticated ? (
+      <>
+        <div className="dropdown">
+          <button className="dropdown-button">
+            Navigation
+          </button>
+            <div className="dropdown-menu">
+                <NavLink className={
+                  location.pathname === "/" ? "nav__link__anchor-active" : null
+                }
+                href = "/"
+                >
+                  Home
+                </NavLink>
+                <NavLink className={
+                  location.pathname === "/about" ? "nav__link__anchor-active" : null
+                }
+                href = "/about"
+                >
+                  About
+                </NavLink>
+                {/* <NavLink className={
+                  location.pathname === "/help" ? "nav__link__anchor-active" : null
+                }
+                href = "/help"
+                >
+                  Help
+                </NavLink> */}
+                <NavLink className={
+                  location.pathname === "/user-guide" ? "nav__link__anchor-active" : null
+                }
+                href = "/user-guide"
+                >
+                  User Guide
+                </NavLink>
+            </div>
+        </div>
+      </>
+    ) : (
+      <>
+        <div className="dropdown">
+          <button className="dropdown-button">
+            Navigation
+          </button>
+            <div className="dropdown-menu">
+                <NavLink className={
+                  location.pathname === "/" ? "nav__link__anchor-active" : null
+                }
+                href = "/"
+                >
+                  Home
+                </NavLink>
+                <NavLink className={
+                  location.pathname === "/about" ? "nav__link__anchor-active" : null
+                }
+                href="/about">
+                  About
+                </NavLink>
+                {/* <NavLink className={
+                  location.pathname === "/help" ? "nav__link__anchor-active" : null
+                }
+                href="/help">
+                  Help
+                </NavLink> */}
+            </div>
+        </div>
+      </>
+    );
+  
+    return (
+      <>
+        {createLinks()}
+      </>
+    );
+};
 
 const NavLink = ({ isAnchor, href, children, className }) => {
   const linkClass = clsx("nav__link__anchor", className);

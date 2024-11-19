@@ -18,7 +18,3 @@
     grid-template-columns: 1fr 1fr;
     column-gap: 8px;
 }
-
-.confidence__submit-change {
-    background: linear-gradient(45deg, #6d977c, #f7de7b);
-}

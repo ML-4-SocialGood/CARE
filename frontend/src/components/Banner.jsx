@@ -7,7 +7,6 @@ import React from "react";
 import clsx from "clsx";
 
 export default function Banner({ message, onDismiss, status, style }) {
-  // TO DO: This should come with an aria-live region
   const [showBanner, setShowBanner] = React.useState(true);
   const [isAnimating, setIsAnimating] = React.useState(false);
 
@@ -17,6 +16,21 @@ export default function Banner({ message, onDismiss, status, style }) {
     status === "error" && "banner--error",
     status === "success" && "banner--success"
   );
+
+  // Automatically close the banner after 5 seconds
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setIsAnimating(false);
+        setShowBanner(false);
+        onDismiss();
+      }, 250);
+    }, 2000);
+
+    // Clear the timer if the banner is dismissed manually
+    return () => clearTimeout(timer);
+  }, [onDismiss]);
 
   return !showBanner || !message || !message?.length ? null : (
     <div className={bannerClass} style={style}>

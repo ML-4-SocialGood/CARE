@@ -90,10 +90,10 @@ export default function Faq() {
       />
 
       <AccordionItem
-        buttonText="How does the AI model identify and re-identify stoats?"
+        buttonText="How does the AI model identify and re-identify animals?"
         content={
           <div>
-            <strong>CARE (Conservation through AI-Driven Animal Re-Identification)</strong> uses a <strong>CLIP-based AI model</strong> to identify individual stoats. 
+            <strong>CARE (Conservation through AI-Driven Animal Re-Identification)</strong> uses a <strong>CLIP-based AI model</strong> to identify individual animals. 
             This model was developed by doctoral students <strong>Di</strong> and <strong>Justin</strong> under the supervision of <strong>Dr Yun Sing</strong>, 
             using images collected by motion-sensor cameras around Waiheke Island, provided by <strong>Te Korowai o Waiheke</strong>.
           </div>

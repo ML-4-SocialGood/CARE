@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Heading } from "../../../components/Heading";
 import PropTypes from "prop-types";
 import clsx from "clsx";
@@ -10,6 +10,7 @@ import {Button} from "../../../components/Button.jsx";
 export default function FilterConfidence({ title, filterButton, onValueChange }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const dropdownRef = useRef(null); // Reference to the dropdown container
 
   const [confLow, setConfLow] = useState('0');
   const [confHigh, setConfHigh] = useState('1');
@@ -32,9 +33,28 @@ export default function FilterConfidence({ title, filterButton, onValueChange })
     setIsOpen(false); // Close the dropdown
   };
 
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    // Cleanup the event listener on unmount
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
   return (
     <>
-      <div className="galley__dropdown">
+      <div className="galley__dropdown" ref={dropdownRef}>
         <div
           className={clsx(
             "gallery__filter-heading-link",

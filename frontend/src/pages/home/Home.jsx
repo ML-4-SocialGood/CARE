@@ -11,7 +11,6 @@ export default function Home() {
     <>
       <Hero />
       <Divider />
-      <HomeSubsectionOne />
       <HomeSubsectionTwo />
       <Divider />
     </>

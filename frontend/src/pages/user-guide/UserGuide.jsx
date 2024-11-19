@@ -54,7 +54,7 @@ export default function UserGuide() {
             </p>
             <p>
               Select a folder from the <strong>left sidebar</strong>, then choose the images you wish to use with the <strong>Detection model</strong>. 
-              You can also use the <strong>"Select All with Subfolders"</strong> button to include all images, including those in subfolders. 
+              You can also use the <strong>"Select all with subfolders"</strong> button to include all images, including those in subfolders. 
             </p> 
             <p>
               Once you’ve selected the images for processing, click the <strong>"Run Detection"</strong> button to begin. 
@@ -97,7 +97,7 @@ export default function UserGuide() {
             </p>
             <p>
               Select a folder from the left sidebar, then choose the images you wish to use for the <strong>Re-Identification model</strong>. 
-              You can also use the <strong>"Select All with Subfolders"</strong> button to include all images, including those in subfolders. 
+              You can also use the <strong>"Select all with subfolders"</strong> button to include all images, including those in subfolders. 
             </p> 
             <p>
               Once you’ve selected the images for processing, click the <strong>"ReID Selected"</strong> button to begin. 
@@ -172,10 +172,10 @@ export default function UserGuide() {
 
 
       <AccordionItem
-        buttonText="How does the AI model identify and re-identify stoats?"
+        buttonText="How does the AI model identify and re-identify animals?"
         content={
           <div>
-            <strong>CARE (Conservation through AI-Driven Animal Re-Identification)</strong> uses a <strong>CLIP-based AI model</strong> to identify individual stoats. 
+            <strong>CARE (Conservation through AI-Driven Animal Re-Identification)</strong> uses a <strong>CLIP-based AI model</strong> to identify individual animals. 
             This model was developed by doctoral students <strong>Di</strong> and <strong>Justin</strong> under the supervision of <strong>Dr Yun Sing</strong>, 
             using images collected by motion-sensor cameras around Waiheke Island, provided by <strong>Te Korowai o Waiheke</strong>.
           </div>

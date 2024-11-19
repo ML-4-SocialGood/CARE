@@ -1,5 +1,5 @@
 .tree-item {
-  padding: 12px;
+  padding: 10px;
   cursor: pointer;
   border-radius: var(--header-border-radius);
   display: flex;
@@ -8,11 +8,16 @@
 }
 
 .tree-item:hover {
-  background-color: rgba(27, 36, 24, 0.24);
+  background: var(--colour-gray-6);
+  transition: all 0.3s ease;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  color: var(--text-colour-dark);
 }
 
 .tree-item-active {
-  background-color: rgba(27, 36, 24, 0.24);
+  background: var(--colour-gray-4);
+  transition: all 0.3s ease; 
+  color: var(--text-colour-dark);
 }
 
 .tree-item-icon {

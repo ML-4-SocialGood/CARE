@@ -76,8 +76,6 @@
 .rename-submit-button {
   padding-left: 16px;
   padding-right: 16px;
-  background: linear-gradient(45deg, #6d977c, #f7de7b);
-  color: var(--text-colour-dark);
 }
 
 .notification-modal {
@@ -98,7 +96,6 @@
   min-height: min(var(--modal-min-height), 100vh);
   overflow-y: auto;
   transition: opacity 0.8s ease;
-  #background-color: rgba(255, 255, 255, 0.9);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   opacity: 0.9;
 }
@@ -106,13 +103,5 @@
 .notification-modal.show {
   opacity: 1; /* 透明度为 1 显示模态框 */
 }
-
-
-.button:hover {
-  background: linear-gradient(90deg, #ffcc66, #ff9900);
-  /* transform: scale(1.05); */
-  box-shadow: 0 4px 10px rgba(255, 153, 0, 0.4);
-}
-
 
 

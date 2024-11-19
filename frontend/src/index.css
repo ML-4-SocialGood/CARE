@@ -63,7 +63,7 @@
   --colour-secondary-light: #fefbf0;
   --colour-secondary: #fcdeb1;
   --colour-secondary-dark: #ffeebc;
-  --colour-secondary-darker: #fee28f;
+  --colour-secondary-darker: #bb7000;
   --colour-gray-1: #ffffff;
   --colour-gray-2: #eeeeee;
   --colour-gray-3: #d5d5d5;
@@ -93,16 +93,6 @@
   --border-radius-medium: calc(var(--base-unit) * 2);
   --border-radius-large: calc(var(--base-unit) * 2);
 
-  /* Gradient background */
-  --gradient-bg: linear-gradient(
-    to left bottom,
-    #31402c,
-    #44563d,
-    #576c50,
-    #6b8462,
-    #809c76
-  );
-
   /* Standard values for light mode */
   --text-colour-light: var(--colour-gray-1);
   --text-colour-lighter: var(--colour-gray-4);
@@ -128,7 +118,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #3a4636;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;

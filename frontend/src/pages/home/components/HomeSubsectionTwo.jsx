@@ -29,7 +29,10 @@ export default function HomeSubsectionTwo() {
           Why choose CARE?
         </Heading>
         <p className="subsection__paragraph">
-          AI can detect things that the human eye simply cannot. CARE uses a CLIP-based AI model that has been trained to identify stoats at an individual level.
+        CARE (Clip-based Animal RE-identification) is an advanced, AI-driven web toolkit designed to enhance 
+        wildlife conservation efforts by enabling precise, scalable animal re-identification. We hope to make this 
+        technology available to the wider community, empowering researchers, conservationists, and enthusiasts alike 
+        to identify and track animals effortlessly, advancing wildlife conservation and ecological research.
         </p>
       </div>
     </HomeSubsection>

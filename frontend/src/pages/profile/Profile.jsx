@@ -66,14 +66,14 @@ export default function Profile() {
        <p>{user.email}</p >
 
         {user.isAdmin && (
-          <Button isLink href="/users" className="profile-button action">
+          <Button isLink href="/users" className="profile-button action button-secondary">
             Manage users
           </Button>
         )}
-        <Button isLink href="/profile/user" className="profile-button action">
+        <Button isLink href="/profile/user" className="profile-button action button-secondary">
           Update profile
         </Button>
-        <SignOutButton variant="primary" className="profile-button">
+        <SignOutButton variant="primary" className="profile-button button-primary">
           Sign out
         </SignOutButton>
       </div>

@@ -14,12 +14,22 @@
   justify-content: center;
 }
 
+.button:hover:enabled {
+  background: linear-gradient(90deg, #ffcc66, #ff9900);
+  /* transform: scale(1.05); */
+  box-shadow: 0 4px 10px rgba(255, 153, 0, 0.4);
+}
+
+.button:disabled {
+  background: var(--colour-gray-7);
+}
+
 .button-primary {
   background-color: var(--colour-secondary);
   color: var(--text-colour-dark);
 }
 
-.button-primary:hover {
+.button-primary:hover:enabled {
   background-color: var(--colour-primary-lighter);
 }
 

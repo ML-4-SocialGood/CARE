@@ -14,7 +14,7 @@
 .header {
   z-index: 1;
   width: calc(100% - (var(--space-64) * 2));
-  background-color: rgba(0, 0.0078, 0.0039, 0.45);
+  background-color: rgba(0, 0, 0, 0.45);
   margin: var(--space-32) var(--space-64) 0;
   border-radius: var(--header-border-radius);
   color: var(--text-colour-light);
@@ -115,7 +115,7 @@
   .nav__container {
     position: absolute;
     right: 0;
-    background-color: rgba(0, 0.0078, 0.0039, 0.45);
+    background-color: rgba(0, 0, 0, 0.944);
     top: calc(var(--header-height) + var(--space-8));
     border-radius: 8px;
     padding: var(--space-16) var(--space-24);

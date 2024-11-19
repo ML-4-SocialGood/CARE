@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   flex-direction: column;
-  text-align: center;
+  text-align: left;
   min-height: 100vh;
 }
 

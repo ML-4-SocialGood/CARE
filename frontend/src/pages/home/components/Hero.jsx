@@ -1,7 +1,7 @@
 /** @format */
 
 import React, { useContext } from "react";
-import HeroVideo from "../../../assets/hero__video.mp4";
+import HeroVideo from "../../../assets/stoat-4.mp4";
 import HeroFallbackImage from "../../../assets/hero_fallback.jpg";
 import { Heading } from "../../../components/Heading";
 import { Button, SignInButton } from "../../../components/Button";
@@ -19,9 +19,9 @@ export default function Hero() {
       </video>
       <div className="hero__content">
         <div className="hero__content__text">
-          <Heading level={1}>AI-Driven Identification</Heading>
+          <Heading level={1}>CARE Toolkit</Heading>
           <Heading level={3} className={`hero__content__subheading`}>
-            On the road to a predator-free Waiheke
+          Towards AI-driven conservation
           </Heading>
           {isAuthenticated ? (
             <Button

@@ -3,9 +3,11 @@ import { TreeContext } from "./TreeProvider";
 import classNames from "classnames";
 import styles from "./ReIDtreeItem.module.css";
 import deleteIcon from "../assets/icon-delete.svg";
-import renameIcon from "../assets/icon_rename.svg";
 import deleteIconOnclick from "../assets/icon-delete_onclick.svg";
-import downloadIcon from "../assets/icon-reid-download.svg"; // Import the download icon
+import renameIcon from "../assets/icon_rename.svg";
+import renameIconOnclick from "../assets/icon_rename_onclick.svg";
+import downloadIcon from "../assets/icon-reid-download.svg"; 
+import downloadIconOnclick from "../assets/icon-reid-download_onclick.svg"; 
 
 export default function ReIDTreeItem({ itemId, label, children, level, onDelete, onRename, onDownload }) {
     const { selected, setSelected } = useContext(TreeContext);
@@ -101,7 +103,12 @@ export default function ReIDTreeItem({ itemId, label, children, level, onDelete,
                                 <img
                                     src={downloadIcon}
                                     alt="Download"
-                                    className={styles.treeItemActionIcon}
+                                    className={`${styles.downloadIcon} ${styles.treeItemActionIcon}`}
+                                />
+                                <img
+                                    src={downloadIconOnclick}
+                                    alt="Download"
+                                    className={`${styles.downloadIcon} ${styles.treeItemActionIconHover}`}
                                 />
                             </button>
                         </>
@@ -119,7 +126,13 @@ export default function ReIDTreeItem({ itemId, label, children, level, onDelete,
                             <img
                                 src={renameIcon}
                                 alt="Rename"
-                                className={styles.treeItemActionIcon}
+                                className={`${styles.renameIcon} ${styles.treeItemActionIcon}`}
+                            />
+
+                            <img
+                                src={renameIconOnclick}
+                                alt="Rename"
+                                className={`${styles.renameIcon} ${styles.treeItemActionIconHover}`}
                             />
                         </button>
                     )}

@@ -5,6 +5,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    background-color: var(--colour-primary-dark);
   }
 
 .header_text{
@@ -14,6 +15,11 @@
     color: #FCDEB1;
     width: 60%;
     margin-top: 20px;
+}
+
+.paragraph_text{
+    font-size: 25px;
+    color: #FCDEB1;
 }
 
 @media only screen and (max-width: 992px) {

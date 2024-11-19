@@ -14,6 +14,8 @@ import Modal from "../../../components/Modal";
 import TreeItem from "../../../components/TreeItem";
 import TreeView from "../../../components/TreeView";
 import apiClient from "../../../utils/apiClient";
+import downloadIcon from "../../../assets/icon-reid-download.svg"; 
+import downloadIconOnclick from "../../../assets/icon-reid-download_onclick.svg"; 
 import classNames from "classnames";
 
 export default function UploadsView({ uploads }) {
@@ -32,6 +34,24 @@ export default function UploadsView({ uploads }) {
   const [status, setStatus] = useState("");
   const [completed, setCompleted] = useState(0);
   const [total, setTotal] = useState(0);
+
+  const itemsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageCount = Math.ceil(files.length / itemsPerPage);
+
+  const [inputPage, setInputPage] = useState("1");
+  // const [isSelected, setIsSelected] = useState(false);
+
+  const currentItems = files.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
+
+  const changePage = ({ selected }) => {
+    setCurrentPage(selected);
+    setInputPage((selected + 1).toString());
+    handlePreview(files[(selected)*itemsPerPage], files);
+  };
 
   useEffect(() => {
     if (!currentFolder) return;
@@ -60,12 +80,16 @@ export default function UploadsView({ uploads }) {
         }));
 
       setFiles(files);
+
+      if (files.length != 0) { 
+        handlePreview(files[0], files);
+      }
     };
 
     fetchFiles();
   }, [currentFolder]);
 
-  const handlePreview = async (file) => {
+  const handlePreview = async (file, files) => {
     const [date, ...paths] = file.path.split("/");
 
     const response = await apiClient(
@@ -80,6 +104,7 @@ export default function UploadsView({ uploads }) {
       path: file.path,
       name: file.name,
       src: URL.createObjectURL(data),
+      index: files.indexOf(file),
     });
   };
 
@@ -155,17 +180,148 @@ export default function UploadsView({ uploads }) {
     }
   };
 
+  const handleDeselectAll = async () => {
+    const response = await apiClient(
+      `/api/users/images/select_all?path=${currentFolder}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      const newSelected = new Set(selected);
+      data.selectAllPaths.forEach((item) => {
+        newSelected.delete(item.replaceAll("\\", "/"));
+      });
+      setSelected(newSelected);
+    }
+  };
+
+  async function selectInputs() {
+    // get all paths with current folder
+    const response = await apiClient(
+      `/api/users/images/select_all?path=${currentFolder}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // check if all paths are in current selections
+    if (response.ok) {
+      const data = await response.json();
+      if (data.selectAllPaths.every((file) => selected.has(file.replaceAll("\\", "/")))){
+        return true;
+      } else {
+        return false;
+      }
+    }
+  };
+
+  const onDownload = async (file) => {
+    const [date, ...paths] = file.path.split("/");
+
+    try {
+      const response = await apiClient(
+        `/api/users/images/view?date=${date}&imagePath=${paths.join("/")}`,
+        {
+          method: "GET",
+        }
+      );
+  
+      if (!response.ok) {
+        const body = await response.json();
+        throw new Error(body.error);
+      }
+
+      const filename = `${file.name}`;
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+
+    } catch (error) {
+      console.error("Failed to download result:", error);
+      setNotificationMessage("Failed to download the result. Please try again.");
+      setShowNotificationModal(true);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      const response = await apiClient('/api/users/images/download_selected', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          selectedPaths: Array.from(selected),
+        }),
+      });
+  
+      if (!response.ok) {
+        const body = await response.json();
+        throw new Error(body.error);
+      }
+
+      // Generate timestamp-based zip filename using current timezone in YYYYMMDD_HHMMSS format
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+
+      const localTimestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+      const filename = `gallery_download_${localTimestamp}.zip`;
+  
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      console.error(err);
+      dispatch(
+        add_message({
+          message: `${err}`,
+          status: bannerStatuses.error,
+        })
+      );
+    }
+  };
+
   return (
     <div className="uploads-view">
       <div className="uploads-folder-list">
-        <TreeView onSelectedChange={(itemId) => setCurrentFolder(itemId)}>
+        <div className="uploads-folder-container">
+        <TreeView onSelectedChange={ async (itemId) => {
+          setCurrentFolder(itemId);
+          setPreview(null);
+          }}>
           <TreeList folders={uploads}></TreeList>
         </TreeView>
+        </div>
       </div>
       <div className="uploads-file-list">
         {currentFolder ? (
           <PaginateItems
-            itemsPerPage={10}
+            itemsPerPage={itemsPerPage}
             files={currentFiles}
             selected={selected}
             setSelected={setSelected}
@@ -173,6 +329,17 @@ export default function UploadsView({ uploads }) {
             preview={preview}
             handlePreview={handlePreview}
             handleSelectAll={handleSelectAll}
+            handleDeselectAll={handleDeselectAll}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            pageCount={pageCount}
+            currentItems={currentItems}
+            changePage={changePage}
+            inputPage={inputPage}
+            setInputPage={setInputPage}
+            setPreview={setPreview}
+            handleDownload={handleDownload}
+            selectInputs={selectInputs}
           />
         ) : (
           <div className="uploads-file-list-warning">
@@ -182,26 +349,21 @@ export default function UploadsView({ uploads }) {
         )}
       </div>
       {preview && (
-        <div className="uploads-preview">
-          <div className="uploads-preview__header">
-            <Button
-              className="uploads-preview__close-button"
-              onClick={() => {
-                setPreview(null);
-              }}
-            >
-              <img
-                alt="Close preview"
-                className="uploads-preview__close-icon"
-                src={closeIcon}
-              />
-            </Button>
-          </div>
-          <Heading level={2} className="uploads-preview__title">
-            {preview.name}
-          </Heading>
-          <img src={preview.src} className="primary-preview" />
-        </div>
+        <Preview
+          files={currentFiles}
+          preview={preview}
+          handlePreview={handlePreview}
+          setPreview={setPreview}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          changePage={changePage}
+          inputPage={inputPage}
+          setInputPage={setInputPage}
+          selected={selected}
+          setSelected={setSelected}
+          onDownload={onDownload}
+        />
       )}
       {status &&
         createPortal(
@@ -273,21 +435,28 @@ function PaginateItems({
   preview,
   handlePreview,
   handleSelectAll,
+  handleDeselectAll,
+  currentPage,
+  setCurrentPage,
+  pageCount,
+  currentItems,
+  changePage,
+  inputPage,
+  setInputPage,
+  setPreview,
+  handleDownload,
+  selectInputs,
 }) {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [inputPage, setInputPage] = useState("1");
+  const [allSelected, setAllSelected] = useState(null);
 
-  const pageCount = Math.ceil(files.length / itemsPerPage);
+  useEffect(() => {
+    const getResult = async () => {
+      const result = await selectInputs(); 
+      setAllSelected(result); 
+    };
 
-  const currentItems = files.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
-
-  const changePage = ({ selected }) => {
-    setCurrentPage(selected);
-    setInputPage((selected + 1).toString());
-  };
+    getResult(); 
+  });
 
   const handleInputPageChange = () => {
     const page = +inputPage;
@@ -306,6 +475,8 @@ function PaginateItems({
       setCurrentPage(page - 1);
       setInputPage(page.toString());
     }
+
+    handlePreview(files[(page-1)*itemsPerPage], files);
   };
 
   useEffect(() => {
@@ -313,31 +484,71 @@ function PaginateItems({
     setInputPage("1");
   }, [files]);
 
+  if (currentItems.length === 0) {
+    return (
+      <>
+      <div className="uploads__list__item uploads__list__item_title uploads__list__header">
+          <div className="uploads__list__item__fileinfo">
+            {selected.size > 0 ? (
+              selected.size + " "
+            ):(
+              "No "
+            )} 
+            files found
+            <div className="heading-buttons-container">
+              {allSelected ? (
+                <Button
+                className="heading-buttons button-primary"
+                onClick={handleDeselectAll}>
+                  Deselect all with subfolders
+                </Button>
+              ):(
+                <Button
+                className="heading-buttons button-primary"
+                onClick={handleSelectAll}>
+                  Select all with subfolders
+                </Button>
+              )}
+            </div>
+          </div>
+      </div>
+      <Button 
+          className="downloadSelected-button button-primary" 
+          onClick={handleDownload}
+          disabled={selected.size === 0}  // Disable if nothing is selected
+        >
+          Download Selected
+          {selected.size > 0 && (
+            <span className="upload-button-count">{selected.size}</span>
+          )}
+      </Button>
+      <Button
+        className="analyse-button button-primary"
+        onClick={handleAnalyse}
+        disabled={selected.size === 0} // Disable if nothing selected
+        >
+        Run Detection
+        {selected.size > 0 && (
+          <span className="upload-button-count">{selected.size}</span>
+        )}
+      </Button>
+      </>
+    );
+  }
+
   return (
     <>
-      {currentItems.length === 0 ? (
-        <div className="uploads__list__item uploads__list__item_title">
-          <div className="uploads__list__item__fileinfo">
-            No files found
-            <Button
-              className="uploads__list__item__button"
-              onClick={handleSelectAll}
-            >
-              Select All with Subfolders
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <FileItem
-          files={files} // Pass the files prop here
-          currentItems={currentItems}
-          selected={selected}
-          setSelected={setSelected}
-          preview={preview}
-          handlePreview={handlePreview}
-          handleSelectAll={handleSelectAll}
+      <FileItem
+        files={files} // Pass the files prop here
+        currentItems={currentItems}
+        selected={selected}
+        setSelected={setSelected}
+        preview={preview}
+        handlePreview={handlePreview}
+        handleSelectAll={handleSelectAll}
+        handleDeselectAll={handleDeselectAll}
+        allSelected={allSelected}
         />
-      )}
 
       <div className="pagination-controls">
         <ReactPaginate
@@ -369,17 +580,26 @@ function PaginateItems({
             }}
           />
           <Button
-            className="paginationNumberChangeButton"
+            className="paginationNumberChangeButton button-primary"
             onClick={handleInputPageChange}
           >
             Go
           </Button>
         </div>
       </div>
-
+      <Button 
+          className="downloadSelected-button button-primary" 
+          onClick={handleDownload}
+          disabled={selected.size === 0}  // Disable if nothing is selected
+        >
+          Download Selected
+          {selected.size > 0 && (
+            <span className="upload-button-count">{selected.size}</span>
+          )}
+      </Button>
       {/* "Run Detection" button always visible */}
       <Button
-        className="analyse-button"
+        className="analyse-button button-primary"
         onClick={handleAnalyse}
         disabled={selected.size === 0} // Disable if nothing selected
       >
@@ -392,6 +612,142 @@ function PaginateItems({
   );
 }
 
+function Preview({
+  files,
+  preview,
+  handlePreview,
+  setPreview,
+  itemsPerPage,
+  currentPage,
+  setCurrentPage,
+  changePage,
+  inputPage,
+  setInputPage,
+  selected,
+  setSelected,
+  onDownload
+}) { 
+  const curindex = preview.index;
+  const curindexmod = curindex % itemsPerPage;
+  const curPage = Math.floor(curindex / itemsPerPage) + 1;
+
+  // Function to navigate to the previous file
+  const handlePrev = () => {
+    setInputPage((curPage).toString());
+
+    if (curPage != (currentPage+1)) {
+      setCurrentPage(curPage-1);
+    }
+
+    if (files.length === 0) return;
+
+    const prevIndex = curindex > 0 ? curindex - 1 : 0;
+
+    if (curindexmod == 0 && prevIndex != 0) {
+      setCurrentPage(currentPage-1);
+    }
+
+    handlePreview(files[prevIndex], files);
+  };
+
+  // Function to navigate to the next file
+  const handleNext = () => {
+    setInputPage((curPage).toString());
+
+    if (curPage != (currentPage+1)) {
+      setInputPage((curPage).toString());
+      setCurrentPage(curPage-1);
+    }
+
+    if (files.length === 0) return;
+
+    const nextIndex = curindex < files.length - 1 ? curindex + 1 : files.length - 1;
+
+    if (curindexmod == itemsPerPage-1 && nextIndex != files.length - 1) {
+      setCurrentPage(currentPage+1);
+    }
+
+    handlePreview(files[nextIndex], files);
+  };
+
+  const closePrev = () => {
+    setPreview(null);
+  }
+
+  return (
+    <div className="uploads-preview">
+      <div className="uploads-preview__header">
+        <Button
+          className="uploads-preview__close-button button-primary"
+          onClick={closePrev}
+        >
+          <img
+            alt="Close preview"
+            className="uploads-preview__close-icon"
+            src={closeIcon}
+          />
+        </Button>
+      </div>
+      <div className="preview-header">
+        <button
+          className="download_button"
+          onClick={(e) => {
+              e.stopPropagation();
+              onDownload(preview);
+          }}
+          >
+          <img
+              src={downloadIcon}
+              alt="Download"
+              className={"downloadIcon"}
+          />
+          <img
+              src={downloadIconOnclick}
+              alt="Download"
+              className={"downloadIcon downloadIconHover"}
+          />
+        </button>
+        <Heading level={2} className="uploads-preview__title">
+          {preview.name}
+        </Heading>
+      </div>
+      <img src={preview.src} className="primary-preview" />
+      <div className="preview-navigation">
+        <input
+          className="preview-checkbox"
+          type="checkbox"
+          checked={selected.has(preview.path)}
+          onChange={(event) => {
+            setSelected((selected) => {
+              const newSelected = new Set(selected);
+              if (event.target.checked) {
+                newSelected.add(preview.path);
+              } else {
+                newSelected.delete(preview.path);
+              }
+              return newSelected;
+            });
+          }}>
+        </input>
+        <div>
+          <Button 
+            className="button-primary prev-arrows"
+            onClick={handlePrev}
+            disabled={files.length <= 1}> 
+            Prev
+          </Button>
+          <Button 
+            className="button-primary prev-arrows"
+            onClick={handleNext}
+            disabled={files.length <= 1}> 
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FileItem({
   files,
   currentItems,
@@ -400,6 +756,8 @@ function FileItem({
   preview,
   handlePreview,
   handleSelectAll,
+  handleDeselectAll,
+  allSelected,
 }) {
   const selectAllRef = useRef();
 
@@ -416,22 +774,37 @@ function FileItem({
 
   if (currentItems.length === 0) {
     return (
-      <div className="uploads__list__item uploads__list__item_title">
+      <div className="uploads__list__item uploads__list__item_title uploads__list__header">
         <div className="uploads__list__item__fileinfo">
-          No files found
-          <Button
-            className="uploads__list__item__button"
-            onClick={handleSelectAll}
-          >
-            Select All with Subfolders
-          </Button>
+            {selected.size > 0 ? (
+              selected.size + " "
+            ):(
+              "No "
+            )} 
+            files found
+            <div className="heading-buttons-container">
+              {allSelected ? (
+                <Button
+                className="heading-buttons button-primary"
+                onClick={handleDeselectAll}>
+                  Deselect all with subfolders
+                </Button>
+              ):(
+                <Button
+                className="heading-buttons button-primary"
+                onClick={handleSelectAll}>
+                  Select all with subfolders
+                </Button>
+              )}
+            </div>
         </div>
       </div>
     );
   }
 
   return (
-    <ul>
+    <>
+    <ul className="uploads__list__header">
       <li className="uploads__list__item uploads__list__item_title">
         <input
           ref={selectAllRef}
@@ -451,14 +824,25 @@ function FileItem({
         />
         <div className="uploads__list__item__fileinfo">
           Select All
-          <Button
-            className="uploads__list__item__button"
-            onClick={handleSelectAll}
-          >
-            Select All with Subfolders
-          </Button>
+          <div className="heading-buttons-container">
+            {allSelected ? (
+              <Button
+              className="heading-buttons button-primary"
+              onClick={handleDeselectAll}>
+                Deselect all with subfolders
+              </Button>
+            ):(
+              <Button
+              className="heading-buttons button-primary"
+              onClick={handleSelectAll}>
+                Select all with subfolders
+              </Button>
+            )}
+          </div>
         </div>
       </li>
+      </ul>
+      <ul className="uploads__list__items">
       {currentItems.map((file, index) => (
         <li
           className={classNames(
@@ -466,7 +850,7 @@ function FileItem({
             file.path === preview?.path && "file-name-selected"
           )}
           key={`${file.name}-${index}`}
-          onClick={() => handlePreview(file)}
+          onClick={() => handlePreview(file, files)}
         >
           <input
             type="checkbox"
@@ -487,6 +871,7 @@ function FileItem({
         </li>
       ))}
     </ul>
+    </>
   );
 }
 

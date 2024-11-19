@@ -143,21 +143,4 @@ The following flowchart illustrates the basic usage of our application:
 Platform Architecture Chart
 ![Platform Architecture Chart](readme_media/CARE_Backend.png "Platform Architecture Chart")
 
-## Screenshots
-Home Page  
-![Home Page](readme_media/CARE_Home.png "Home Page")
 
-Sign in Page  
-![Sign in Page](readme_media/CARE_Signin.png "Sign in Page")
-
-Image Uploader  
-![Image Uploader](readme_media/CARE_Uploader.png "Image Uploader")
-
-Uploaded Image Gallery
-![Uploaded Image Gallery](readme_media/CARE_Image_Gallery.png "Uploaded Image Gallery")
-
-Detection Image Gallery  
-![Detection Image Gallery](readme_media/CARE_Detection_Gallery.png "Detection Image Gallery")
-
-ReID Image Gallery  
-![ReID Image Gallery](readme_media/CARE_ReID_Gallery.png "ReID Image Gallery")

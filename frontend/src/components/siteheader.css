@@ -111,7 +111,7 @@
   }
 }
 
-@media only screen and (max-width: 992px) {
+@media only screen and (max-width: 1120px) {
   .nav__container {
     position: absolute;
     right: 0;

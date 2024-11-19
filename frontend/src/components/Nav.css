@@ -62,7 +62,7 @@
     transform-origin: bottom-left;
   }
 
-  @media only screen and (max-width: 992px){
+  @media only screen and (max-width: 1120px){
     .vl {
       border-left: 0px;
       border-bottom: 1px solid var(--colour-primary-lightest);

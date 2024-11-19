@@ -134,7 +134,7 @@ Password: `123456`
 
 ## User Guide
 The CARE Web Platform comes with a comprehensive user guide, which can be found at the bottom of the platform.  
-
+![User Guide](readme_media/CARE_User_Guide.png "User Guide")
 
 ## Usage Examples
 The following flowchart illustrates the basic usage of our application:  

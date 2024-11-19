@@ -109,7 +109,7 @@ To use our models, please ensure you have the following model files:
 - **`best_50.pt`:** The Detection Model file. Place it in `<project directory>/backend/ai_server`.
 - **`CARE_Traced.pt`:** The ReID Model file. Place it in `<project directory>/backend/ai_server`.
 
-Please contact us through (dzha866@aucklanduni.ac.nz) if you wish to retrieve the model files.
+Please contact us through (dzha866@aucklanduni.ac.nz) if you wish to retrieve the files.
 
 ### Install Prerequisites
 Before installation, please make sure you have Anaconda, Node.js, and Chrome installed in the default directory.

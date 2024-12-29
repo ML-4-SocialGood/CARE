@@ -84,6 +84,8 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
 
       if (files.length != 0) { 
         handlePreview(files[0], files);
+      } else {
+        setPreview(null);
       }
     };
 
@@ -343,7 +345,6 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
             inputPage={inputPage}
             setInputPage={setInputPage}
             setPreview={setPreview}
-            handleDownload={handleDownload}
             selectInputs={selectInputs}
           />
         ) : (
@@ -408,7 +409,7 @@ const terminateAIAndRefresh = async () => {
     }
 
     const data = await response.json();
-    console.log(data);
+    // console.log(data);
 
     // Once the API call is successful, refresh the page
     window.location.reload();
@@ -457,7 +458,6 @@ function PaginateItems({
   useEffect(() => {
     const getResult = async () => {
       const result = await selectInputs(); 
-      console.log(result);
       setAllSelected(result); 
     };
 

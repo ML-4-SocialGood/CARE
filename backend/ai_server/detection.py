@@ -153,26 +153,26 @@ def worker_process(args):
             counter.value += 1
             print(f"PROCESS: {counter.value}/{total_images}", flush=True)
 
-def process_images_with_pool(yolo_model_path, folder_path, output_dir, json_output_dir, log_file):
+def process_images_with_pool(yolo_model_path, original_images_dir, output_dir, json_output_dir, log_file):
     print("STATUS: BEGIN", flush=True)
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
     if not os.path.exists(json_output_dir):
         os.makedirs(json_output_dir, exist_ok=True)
-    if not os.path.exists(folder_path):
-        log_message(log_file, f"The path '{folder_path}' does not exist.")
-        raise FileNotFoundError(f"The path '{folder_path}' does not exist.")
+    if not os.path.exists(original_images_dir):
+        log_message(log_file, f"The path '{original_images_dir}' does not exist.")
+        raise FileNotFoundError(f"The path '{original_images_dir}' does not exist.")
 
     image_files = []
-    for root, dirs, files in os.walk(folder_path):
+    for root, dirs, files in os.walk(original_images_dir):
         for file in files:
             if file.lower().endswith(('.jpg', '.jpeg', '.png')):
                 image_files.append(os.path.join(root, file))
 
     total_images = len(image_files)
     if total_images == 0:
-        log_message(log_file, f"No images found in the folder '{folder_path}'.")
+        log_message(log_file, f"No images found in the folder '{original_images_dir}'.")
         return
 
     manager = mp.Manager()
@@ -181,7 +181,7 @@ def process_images_with_pool(yolo_model_path, folder_path, output_dir, json_outp
 
     args_list = []
     for img_path in image_files:
-        args_list.append((img_path, output_dir, json_output_dir, folder_path, log_file, counter, total_images, lock))
+        args_list.append((img_path, output_dir, json_output_dir, original_images_dir, log_file, counter, total_images, lock))
 
     num_processes = max(1, min(mp.cpu_count() // 2, 12))
     with mp.Pool(processes=num_processes, initializer=init_process, initargs=(yolo_model_path,)) as pool:

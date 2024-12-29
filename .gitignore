@@ -149,3 +149,5 @@ backend/ai_server/best_50.pt
 /backend/ai_server/detection_logs/
 /backend/ai_server/reid_logs/
 /backend/ai_server/CARE_Traced.pt
+/backend/ai_server/CARE_Traced_GPUv.pt
+/backend/ai_server/best_50_GPU.pt

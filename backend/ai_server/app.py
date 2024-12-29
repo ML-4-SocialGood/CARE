@@ -49,14 +49,14 @@ def run_detection(user_id):
     # Run the Python script using Popen
     if platform.system() == "Windows":
         creationflags = subprocess.CREATE_NEW_PROCESS_GROUP  # Use this flag for Windows
-        process = subprocess.Popen([python_command, 'detection.py', 
+        process = subprocess.Popen([python_command, 'detection_GPU.py', 
                                     os.path.join(current_dir, "..", "temp", "image_detection_pending", str(user_id)),
                                     os.path.join(current_dir, "..", "data", "image_marked", str(user_id)),
                                     os.path.join(current_dir, "..", "data", "image_cropped_json", str(user_id))],
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                                     creationflags=creationflags)
     else:
-        process = subprocess.Popen([python_command, 'detection.py', 
+        process = subprocess.Popen([python_command, 'detection_GPU.py', 
                                     os.path.join(current_dir, "..", "temp", "image_detection_pending", str(user_id)),
                                     os.path.join(current_dir, "..", "data", "image_marked", str(user_id)),
                                     os.path.join(current_dir, "..", "data", "image_cropped_json", str(user_id))],
@@ -83,7 +83,7 @@ def run_reid(user_id):
     python_command = get_python_command()
     current_dir = os.getcwd()
     # Run the Python script using Popen
-    process = subprocess.Popen([python_command, 'ReID.py', 
+    process = subprocess.Popen([python_command, 'ReID_GPU.py', 
                                 os.path.join(current_dir, "..", "temp", "image_reid_pending", str(user_id)), # <image_dir>
                                 os.path.join(current_dir, "..", "data", "image_cropped_json", str(user_id)), # <json_dir>
                                 os.path.join(current_dir, "..", "temp", "image_cropped_reid_pending", str(user_id)), # <output_dir>

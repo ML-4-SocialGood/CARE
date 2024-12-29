@@ -25,7 +25,7 @@ See LICENSE for more information.
 New Zealand is home to some of the world’s most unique fauna, but these native species face significant threats from invasive pests. [One such predator is the stoat, which preys on the young of native birds.](https://www.doc.govt.nz/nature/pests-and-threats/animal-pests-and-threats/stoats) Our client has recognised this issue and tasked us with developing a web platform to assist in monitoring and controlling the presence of stoats on Waiheke Island. The platform leverages machine learning and artificial intelligence to accurately identify stoats and other animals captured in photos taken across the island. By utilising advanced image recognition algorithms, the platform can differentiate between various species, ensuring precise identification and effective monitoring. This innovative approach not only enhances the efficiency of pest control efforts but also contributes to the broader goal of preserving New Zealand’s unique biodiversity.
 
 ## Contributors
-- [Yun Sing Koh](https://profiles.auckland.ac.nz/y-koh) (Professor in Computer Science, University of Auckland)
+- [Yun Sing Koh](https://profiles.auckland.ac.nz/y-koh) (Professor at the School of Computer Science, University of Auckland)
 - [Di Zhao](https://www.linkedin.com/in/di-zhao-56869498/) (4th-Year PhD Student)
 - [Yihao Wu](https://www.linkedin.com/in/yihao-wu-justin327) (1st-Year PhD Student)
 - [Yuzhuo Li](https://www.linkedin.com/in/yuzhuo-li-a4a8b4245/) (Master Student)

@@ -22,7 +22,7 @@ export default function Images() {
   const [confHigh, setConfHigh] = useState('1');
   const [isLoading, setIsLoading] = useState(false); // Track loading state
 
-  const labels = ['No Detection', 'Bird', 'Cat', 'Dog', 'Hedgehog', 'Rabbit', 'Rat', 'Sheep', 'Stoat', 'Trap', 'Weka'];
+  const labels = ['No Detection', 'Bird', 'Cat', 'Deer', 'Dog', 'Ferret', 'Goat', 'Hedgehog', 'Kiwi', 'Lagomorph', 'Livestock', 'Pig', 'Possum', 'Rodent', 'Stoat', 'Wallaby'];
 
   const handleSpeciesSelect = async (species) => {
     setSpecies(species);

@@ -450,7 +450,7 @@ exports.runDetection = async (req, res) => {
     const fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
 
     // Terminate all running AI processes
-    const terminateResponse = await fetch(`http://localhost:${AI_SERVER_PORT}/ai_api/terminate/${userIdFolder}`);
+    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate/${userIdFolder}`);
     if (!terminateResponse.ok) {
       return res.status(400).json({ error: 'Detection AI server error, please contact support.' });
     }
@@ -492,14 +492,14 @@ exports.runDetection = async (req, res) => {
     // Make a GET request to the Flask server for streaming output
     // const AI_SERVER_PORT = process.env.AI_SERVER_PORT || 5000;
     // const response = await axios({
-    //   url: `http://localhost:${AI_SERVER_PORT}/ai_api/detection/${userIdFolder}`,
+    //   url: `http://127.0.0.1:${AI_SERVER_PORT}/ai_api/detection/${userIdFolder}`,
     //   method: 'GET',
     //   responseType: 'stream'
     // });
     
     // Dynamically import node-fetch
     // const fetch = (await import('node-fetch')).default;
-    const response = await fetch(`http://localhost:${AI_SERVER_PORT}/ai_api/detection/${userIdFolder}`);
+    const response = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/detection/${userIdFolder}`);
 
     // Check if the response is okay (status code 200)
     if (!response.ok) {
@@ -906,7 +906,7 @@ exports.runReid = async (req, res) => {
     const fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
 
     // Terminate all running AI processes
-    const terminateResponse = await fetch(`http://localhost:${AI_SERVER_PORT}/ai_api/terminate/${userIdFolder}`);
+    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate/${userIdFolder}`);
     if (!terminateResponse.ok) {
       return res.status(400).json({ error: '(Terminate) Re-identification AI server error, please contact support.' });
     }
@@ -950,7 +950,7 @@ exports.runReid = async (req, res) => {
     
     // Dynamically import node-fetch
     // const fetch = (await import('node-fetch')).default;
-    const response = await fetch(`http://localhost:${AI_SERVER_PORT}/ai_api/reid/${userIdFolder}`);
+    const response = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/reid/${userIdFolder}`);
 
     // Check if the response is okay (status code 200)
     if (!response.ok) {
@@ -1355,7 +1355,7 @@ exports.terminateAI = async (req, res) => {
     const fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
 
     // Terminate all running AI processes
-    const terminateResponse = await fetch(`http://localhost:${AI_SERVER_PORT}/ai_api/terminate/${userIdFolder}`);
+    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate/${userIdFolder}`);
     if (!terminateResponse.ok) {
       return res.status(400).json({ error: '(Terminate) AI server error, please contact support.' });
     }

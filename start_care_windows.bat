@@ -1,5 +1,7 @@
 @echo off
 
+call npm install
+
 start cmd.exe /C "echo FRONTEND Terminal && cd frontend && npm run dev"
 
 start cmd.exe /C "echo BACKEND Terminal && cd backend && npm run start"

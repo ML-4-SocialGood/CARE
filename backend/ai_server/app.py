@@ -124,7 +124,7 @@ if __name__ == '__main__':
     ai_server_port = os.getenv("AI_SERVER_PORT", 5000)
 
     # Load YOLO first to avoid streaming output issue
-    DEVICE = "cpu"
-    yolo = YOLO("best_50.pt").to(DEVICE)
+    DEVICE = "cuda"  # Change to "cuda" if using GPU
+    yolo_model = YOLO("best_50_GPU.pt").to(DEVICE)
 
-    app.run(host='localhost', port=ai_server_port)
+    app.run(host='127.0.0.1', port=ai_server_port)

@@ -20,7 +20,7 @@ Run these command under Anaconda prompt:
 `conda env create -f environment_universal.yml`  
 `conda activate care_ai_server_universal`  
 `python app.py`  
-The AI server will be run at http://localhost:5000.  
+The AI server will be run at http://127.0.0.1:5000.  
 
 ---
 

@@ -19,7 +19,7 @@ Description: The HTTP-only cookie containing the JWT token used for authenticati
 - `folderPath` (string, optional): The relative path within the date folder to view (e.g., `A/A1`). Defaults to the `data/image_marked/{userId}/{date}` folder. This path should not allow directory traversal outside the date folder.
   - If `date` is not provided, it will return contents from the `data/image_marked/{userId}` folder.
 - **New Parameter: `label` (string, optional):** Filter images based on the object detection label extracted from their corresponding JSON files. If no label is provided, all images are returned (subject to confidence filtering).
-  - Possible value for `label`: `null`, `Bird`, `Cat`, `Dog`, `Hedgehog`, `Rabbit`, `Rat`, `Sheep`, `Stoat`, `Trap`, `Weka`. (Total 1 + 10 possibilities)  
+  - Possible value for `label`: `null`, `Bird`, `Cat`, `Deer`, `Dog`, `Ferret`, `Goat`, `Hedgehog`, `Kiwi`, `Lagomorph`, `Livestock`, `Pig`, `Possum`, `Rodent`, `Stoat`, `Wallaby`. (Total 1 + 15 possibilities)  
   - Also, when `label` = `null`, it will return images with no detection result, the frontend should display this option as `None`.    
   - Moreover, when `label` is not provided, all images are returned (subject to confidence filtering), the frontend should display this option as `All`.  
 - **New Parameter: `confLow` (number, optional):** Lower bound for the object detection confidence score. Only images with a confidence score greater than or equal to this value will be included. Default: `0`. Minimum: `0`. Maximum: `1`.  

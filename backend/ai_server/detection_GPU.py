@@ -191,8 +191,11 @@ def main():
 
     log_file = create_log_file()
 
-    DEVICE = "cuda"  # Change to "cuda" if using GPU
-    yolo_model = YOLO("best_50_GPU.pt").to(DEVICE)
+    try:
+        DEVICE = "cuda"  # Change to "cuda" if using GPU
+        yolo_model = YOLO("best_50_GPU.pt").to(DEVICE)
+    except Exception as e:
+        log_message(log_file, f"Error processing image: {str(e)}")
 
     # DEVICE = "cpu"
     # batch_size = 16

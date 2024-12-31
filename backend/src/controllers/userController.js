@@ -613,7 +613,7 @@ exports.browseDetectImage = async (req, res) => {
         // }
 
         // Step 4: Filtering logic based on the query parameters
-        const isLabelNoDetection = filterLabel === "NoDetection"; // Check if filterLabel is the string "NoDetection"
+        const isLabelNoDetection = filterLabel === "No Detection"; // Check if filterLabel is the string "NoDetection"
         const isLabelMatch = isLabelNoDetection ? label === null : (!filterLabel || label === filterLabel);
         
         // Apply confidence filtering only if filterLabel is not "null"
@@ -832,7 +832,7 @@ async function getDetectFilePaths(dir, baseDir, filterLabel, confLow, confHigh) 
         // }
 
         // Step 4: Filtering logic based on the query parameters
-        const isLabelNoDetection = filterLabel === "NoDetection"; // Check if filterLabel is the string "NoDetection"
+        const isLabelNoDetection = filterLabel === "No Detection"; // Check if filterLabel is the string "NoDetection"
         const isLabelMatch = isLabelNoDetection ? label === null : (!filterLabel || label === filterLabel);
         
         // Apply confidence filtering only if filterLabel is not "null"

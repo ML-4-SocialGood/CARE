@@ -533,7 +533,7 @@ function PaginateItems({
         onClick={handleAnalyse}
         disabled={selected.size === 0} // Disable if nothing selected
         >
-        ReID Selected
+        Run ReID
         {selected.size > 0 && (
           <span className="upload-button-count">{selected.size}</span>
         )}
@@ -609,7 +609,7 @@ function PaginateItems({
         onClick={handleAnalyse}
         disabled={selected.size === 0} // Disable if nothing selected
       >
-        ReID Selected
+        Run ReID
         {selected.size > 0 && (
           <span className="upload-button-count">{selected.size}</span>
         )}

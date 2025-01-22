@@ -100,7 +100,7 @@ export default function UserGuide() {
               You can also use the <strong>"Select all with subfolders"</strong> button to include all images, including those in subfolders. 
             </p> 
             <p>
-              Once you’ve selected the images for processing, click the <strong>"ReID Selected"</strong> button to begin. 
+              Once you’ve selected the images for processing, click the <strong>"Run ReID"</strong> button to begin. 
               A popup will display a progress bar, keeping you updated on the process’s current status.
             </p>
             <p>

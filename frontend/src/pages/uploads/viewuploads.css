@@ -104,6 +104,10 @@
     flex-direction: row;
     max-height: calc(100vh - 48px);
   }
+
+  .uploads-file-list {
+    overflow-y: auto;
+  }
 }
 
 .uploads-folder-list {
@@ -277,12 +281,14 @@
   .uploads-preview {
     min-width: 500px;
     width: 500px;
+    overflow-y: auto;
   }
 }
 
 .uploads-preview .uploads-preview__header {
   display: flex;
   justify-content: flex-end;
+  overflow-y: auto;
 }
 
 .uploads-preview__title {
@@ -301,6 +307,12 @@
 .uploads-preview .primary-preview {
   width: 100%;
   margin-top: 16px;
+}
+
+.primary-preview {
+  max-width: 100%;
+  width: auto;
+  height: auto;
 }
 
 .uploads-file-list-warning {

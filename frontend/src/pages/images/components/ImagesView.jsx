@@ -533,7 +533,7 @@ function PaginateItems({
         onClick={handleAnalyse}
         disabled={selected.size === 0} // Disable if nothing selected
         >
-        Run Detection
+        ReID Selected
         {selected.size > 0 && (
           <span className="upload-button-count">{selected.size}</span>
         )}

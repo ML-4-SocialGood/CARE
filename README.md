@@ -2,7 +2,7 @@
 
 ## Licence
 CARE is licensed under the GNU Lesser General Public License v3.0.
-See LICENSE for more information.
+See [LICENSE](LICENSE) for more information.
 
 ## Table of Contents
 - [Project Description](#project-description)

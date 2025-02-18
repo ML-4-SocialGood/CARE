@@ -28,6 +28,7 @@ New Zealand is home to some of the world’s most unique fauna, but these native
 - [Yun Sing Koh](https://profiles.auckland.ac.nz/y-koh) (Professor at the School of Computer Science, University of Auckland)
 - [Di Zhao](https://www.linkedin.com/in/di-zhao-56869498/) (4th-Year PhD Student)
 - [Yihao Wu](https://www.linkedin.com/in/yihao-wu-justin327) (1st-Year PhD Student)
+- [Matthew Alajas](https://www.linkedin.com/in/matthew-alajas-79762a136/) (Master Student)
 - [Yuzhuo Li](https://www.linkedin.com/in/yuzhuo-li-a4a8b4245/) (Master Student)
 
 ## Collaborators & Acknowledgements

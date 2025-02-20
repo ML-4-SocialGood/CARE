@@ -1,6 +1,5 @@
 /** @format */
 
-import SiteLogo from "./SiteLogo";
 import "./footer.css";
 import { Button, SignInButton, SignOutButton } from "./Button";
 import Logo from "../assets/Logo-cropped.png";

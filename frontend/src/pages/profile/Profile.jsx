@@ -12,7 +12,6 @@ import {
 } from "../../../features/banner/bannerSlice";
 import Loader from "../../components/Loader";
 import apiClient from "../../utils/apiClient";
-import ProfileVideo from "../../assets/profile_video.mp4";
 
 export default function Profile() {
   const dispatch = useDispatch();

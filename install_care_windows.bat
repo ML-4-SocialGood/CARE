@@ -29,11 +29,11 @@ if "%DEVICE%"=="CPU" (
 	echo This is the installation of the CPU version.
 	echo If you want to download the GPU version, please follow the instructions on the Github: https://github.com/ML-4-SocialGood/CARE.
 	echo.
-    call conda env create -f environment_universal.yml
+    call conda env create --file environment_universal.yml
 ) else (
     echo This is the installation of the GPU version.
     echo.
-	call conda env create -f environment_universal_GPU.yml
+	call conda create --name CARE-GPU python=3.10 -y
 	call conda activate CARE-GPU
 	
 	if "%CUDA%"=="11.8" (
@@ -42,10 +42,13 @@ if "%DEVICE%"=="CPU" (
 	    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 	) else if "%CUDA%"=="12.6" (
 	    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
-	) 
+	)
+
+    call conda install flask pip -y
+    call conda install -c conda-forge opencv python-dotenv yacs -y
+    call pip install ultralytics
 	call conda deactivate
 )
-
 if %errorlevel% neq 0 (
     echo WARNING: Failed to create the anaconda environment. You should restart the installer, or consider manual installation.
     echo NOTICE: If you already created the anaconda environment, you can ignore this message.

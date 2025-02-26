@@ -1,60 +1,74 @@
+import glob
+import json
+import numpy as np
+import os
+import shutil
 import sys
+import threading
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as T
-from config import cfg
-import json
-import os
-import glob
-import shutil
-import numpy as np
-from PIL import Image
-from datetime import datetime
-import threading
-import time
 
-# Function to create a log file with a timestamp
+from config import cfg
+from datetime import datetime
+from PIL import Image
+
+
 def create_log_file():
+    """
+    Create a log file with a timestamp.
+    """
     log_dir = "reid_logs"
     os.makedirs(log_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return os.path.join(log_dir, f"{timestamp}_reid_log.txt")
+
 
 def log_message(log_file, message):
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a") as f:
         f.write(f"[{current_time}] {message}\n")
 
+
 def load_and_preprocess_image(file_path):
     """
-    Load and preprocess image.
+    Load and preprocess image with the configrations.
     """
     img = Image.open(file_path).convert("RGB")
+
     image_transforms = T.Compose([
-        T.Resize(cfg.INPUT.SIZE_TEST),
-        T.ToTensor(),
-        T.Normalize(mean=cfg.INPUT.PIXEL_MEAN, std=cfg.INPUT.PIXEL_STD)
-    ])
-    img = image_transforms(img)
-    img = img.unsqueeze(0)  # add batch dimension
-    return img
+        T.Resize(cfg.INPUT.SIZE_TEST), 
+        T.ToTensor(), 
+        T.Normalize(mean = cfg.INPUT.PIXEL_MEAN, std = cfg.INPUT.PIXEL_STD)
+    ])                                 # define transformations
+
+    image = image_transforms(img)      # apply transformations
+    image = image.unsqueeze(0)         # add batch dimension (i.e., [1, 3, 256, 128])
+    return image
+
 
 def compute_distances(model, query_image, gallery_images, is_duplicate, device):
-    list_of_dist = []
-    query_embedding = model(query_image.to(device))[2]
-
+    """
+    Compute the distances between the query image and the gallery images.
+    """
+    list_of_dists = []
+    query_embedding = model(query_image.to(device))    # forward pass to get the embedding of the query image ([1, 1280])
+    query_cls = query_embedding[:, 768:]    # extract the [CLS] token ([1, 512])
+    
+    # Calculate the similarity and distance.
     for index in range(len(gallery_images)):
-        gallery_embedding = model(gallery_images[index].to(device))[2]
-        similarity = F.cosine_similarity(query_embedding, gallery_embedding)
+        gallery_embedding = model(gallery_images[index].to(device))    # gallery image embedding ([1, 1280])
+        gallery_cls = gallery_embedding[:, 768:]    # extract the [CLS] token ([1, 512])
+        similarity = F.cosine_similarity(query_cls, gallery_cls)
         dist = 1 - similarity
-        list_of_dist.append(dist.cpu().detach().numpy()[0])
-
-    list_of_dist = np.array(list_of_dist)
+        list_of_dists.append(dist.cpu().detach().numpy()[0])
+    
+    list_of_dists = np.array(list_of_dists)
 
     if is_duplicate:
-        list_of_dist[np.argmin(list_of_dist)] = list_of_dist[np.argmax(list_of_dist)] + 1
+        list_of_dists[np.argmin(list_of_dists)] = list_of_dists[np.argmax(list_of_dists)] + 1
+    return list_of_dists
 
-    return list_of_dist
 
 def process_dist_mat(dist_mat):
     output_dict = dict()
@@ -77,8 +91,47 @@ def process_dist_mat(dist_mat):
         elif keys[r] != -1 and keys[matched_index] == -1:
             output_dict[keys[r]].append(matched_index)
             keys[matched_index] = keys[r]
-
     return output_dict
+
+
+def process_dist_mat_v2(dist_mat):
+    """
+    Process the distance matrix to count the number of individuals.
+    """
+    number_of_images = len(dist_mat)
+    keys = np.array([-1] * number_of_images)
+    
+    for r in range(len(dist_mat)):
+        row = dist_mat[r]
+        min_dist = np.min(row)
+        candidates_bool = np.abs(row - min_dist) <= 0.05
+        candidates_index = np.where(candidates_bool)[0]
+        candidates_key = keys[candidates_index]
+        current_counter = np.max(keys)
+        
+        if keys[r] != -1:
+            keys[candidates_index] = keys[r]
+
+        elif keys[r] == -1 and np.all(candidates_key == -1):
+            keys[r] = current_counter + 1
+            keys[candidates_index] = current_counter + 1
+        
+        elif keys[r] == -1 and np.any(candidates_key != -1):
+            min_pos_key = np.min(candidates_key[candidates_key != -1])
+            selected_indices = candidates_index[np.where(candidates_key != min_pos_key)[0]]
+            keys[r] = min_pos_key
+            keys[selected_indices] = min_pos_key
+        
+    aid = 0
+    output_dict = dict()
+    min_key, max_key = np.min(keys), np.max(keys)
+    for k in range(min_key, max_key + 1):
+        if k in keys:
+            if aid not in output_dict:
+                output_dict[aid] = list(np.where(keys == k)[0])
+                aid += 1
+    return output_dict
+
 
 def format_output_dict(image_paths, output_dict, rel_parent_path):
     image_names = []
@@ -96,8 +149,8 @@ def format_output_dict(image_paths, output_dict, rel_parent_path):
             list_of_img_paths.append(img_relative_path)
         if id not in output_dict_with_rel_paths:
             output_dict_with_rel_paths[id] = list_of_img_paths
-
     return output_dict_with_rel_paths
+
 
 def show_results(q_img_paths, reid_dict, reid_output_dir, log_file):
     log_message(log_file, f"The CARE model successfully identified {len(reid_dict)} individuals in the dataset.")
@@ -118,6 +171,7 @@ def show_results(q_img_paths, reid_dict, reid_output_dir, log_file):
         json.dump(reid_dict, json_file, indent=4)
 
     log_message(log_file, f"Re-identification results saved to JSON file: {json_output_path}")
+
 
 def crop_image_from_json(image_path, json_path, output_dir, original_root, log_file):
     with open(json_path, "r") as f:
@@ -156,6 +210,7 @@ def crop_image_from_json(image_path, json_path, output_dir, original_root, log_f
         cropped_img.save(cropped_img_path)
         log_message(log_file, f"Saved cropped image: {cropped_img_path}")
 
+
 def process_images_in_folder(image_dir, json_dir, output_dir, log_file):
     for root, _, files in os.walk(image_dir):
         for file in files:
@@ -169,6 +224,7 @@ def process_images_in_folder(image_dir, json_dir, output_dir, log_file):
                     crop_image_from_json(image_path, json_path, output_dir, image_dir, log_file)
                 else:
                     log_message(log_file, f"JSON file not found for image: {file}")
+
 
 def clear_cropped_folder(cropped_dir, log_file):
     for root, dirs, files in os.walk(cropped_dir):
@@ -186,6 +242,9 @@ def clear_cropped_folder(cropped_dir, log_file):
                 log_message(log_file, f"Deleted directory: {dir_path}")
             except Exception as e:
                 log_message(log_file, f"Error deleting directory {dir_path}: {e}")
+
+
+
 
 def main():
     if len(sys.argv) != 5:
@@ -207,12 +266,16 @@ def main():
     DEVICE = "cpu"
     cfg_file_path = "vit_care.yml"
     saved_model_path = "CARE_Traced.pt"
+
+    # Read and import the cfg file.
     cfg.merge_from_file(cfg_file_path)
+    cfg.merge_from_list([])
     cfg.freeze()
 
+    # Load the traced reid model.
     CARE_Model = torch.jit.load(saved_model_path)
     CARE_Model = CARE_Model.to(DEVICE)
-    CARE_Model.eval()
+    CARE_Model.eval()    # set the model in evaluation mode
 
     cropped_image_paths = sorted(glob.glob(os.path.join(output_dir, "**", "*.jpg"), recursive=True))
     if not cropped_image_paths:
@@ -226,15 +289,14 @@ def main():
 
     distance_mat = [None] * len(cropped_image_paths)
 
-    # 1. Initialize global progress counter and lock (MODIFICATION)
-    global progress
+    global progress    # 1. initialize global progress counter and lock (MODIFICATION).
     progress = 0
     total_images = len(cropped_image_paths)
     progress_lock = threading.Lock()
 
     print(f"PROCESS: {0}/{total_images}", flush=True)
 
-    def worker(indices, total_images, progress_lock):  # 2. Add total_images and progress_lock as arguments (MODIFICATION)
+    def worker(indices, total_images, progress_lock):  # 2. add total_images and progress_lock as arguments (MODIFICATION).
         for index in indices:
             dist = compute_distances(model=CARE_Model,
                                      query_image=cropped_images[index],
@@ -243,7 +305,7 @@ def main():
                                      device=DEVICE)
             distance_mat[index] = dist
 
-            # 3. Update and print progress (MODIFICATION)
+            # 3. Update and print progress (MODIFICATION).
             with progress_lock:
                 global progress
                 progress += 1
@@ -262,7 +324,7 @@ def main():
             end_idx = (i + 1) * chunk_size
         thread_indices = indices[start_idx:end_idx]
         
-        # 4. Pass total_images and progress_lock to worker threads (MODIFICATION)
+        # 4. Pass total_images and progress_lock to worker threads (MODIFICATION).
         t = threading.Thread(target=worker, args=(thread_indices, total_images, progress_lock))
         threads.append(t)
         t.start()
@@ -270,7 +332,7 @@ def main():
     for t in threads:
         t.join()
 
-    id_dict = process_dist_mat(distance_mat)
+    id_dict = process_dist_mat_v2(distance_mat)
     output_dict = format_output_dict(cropped_image_paths, id_dict, output_dir)
 
     show_results(cropped_image_paths, output_dict, reid_output_dir, log_file)

@@ -1,19 +1,21 @@
-import os
-import sys
 import cv2
 import json
-import time
-from ultralytics import YOLO
-from datetime import datetime
 import multiprocessing as mp
+import os
+import sys
+import time
 
-# Global variable
-yolo_model = None
+from datetime import datetime
+from ultralytics import YOLO
+
+
+yolo_model = None    # global variable
 
 def init_process(yolo_model_path):
     global yolo_model
-    DEVICE = "cpu"  # Change to "cuda" if using GPU
+    DEVICE = "cpu"
     yolo_model = YOLO(yolo_model_path).to(DEVICE)
+
 
 def create_log_file():
     log_dir = "detection_logs"
@@ -21,10 +23,12 @@ def create_log_file():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return os.path.join(log_dir, f"{timestamp}_detection_log.txt")
 
+
 def log_message(log_file, message):
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a") as f:
         f.write(f"[{current_time}] {message}\n")
+
 
 def make_inference_detection(path_to_img, output_dir, original_root, log_file):
     global yolo_model
@@ -100,6 +104,7 @@ def make_inference_detection(path_to_img, output_dir, original_root, log_file):
         log_message(log_file, f"Error processing image '{image_filename}': {str(e)}")
         return None
 
+
 def worker_process(args):
     img_path, output_dir, json_output_dir, original_root, log_file, counter, total_images, lock = args
     try:
@@ -153,6 +158,7 @@ def worker_process(args):
             counter.value += 1
             print(f"PROCESS: {counter.value}/{total_images}", flush=True)
 
+
 def process_images_with_pool(yolo_model_path, original_images_dir, output_dir, json_output_dir, log_file):
     print("STATUS: BEGIN", flush=True)
 
@@ -189,6 +195,9 @@ def process_images_with_pool(yolo_model_path, original_images_dir, output_dir, j
 
     print("STATUS: DONE", flush=True)
 
+
+
+
 def main():
     if len(sys.argv) != 4:
         print("Usage: python detection.py <input_folder> <output_folder> <json_output_folder>", flush=True)
@@ -201,7 +210,7 @@ def main():
     log_file = create_log_file()
 
     start_time = time.time()
-    yolo_model_path = "best_50.pt"
+    yolo_model_path = "Detector.pt"
     process_images_with_pool(yolo_model_path, original_images_dir, output_images_dir, json_output_dir, log_file)
 
     end_time = time.time()

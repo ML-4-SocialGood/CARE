@@ -2,10 +2,12 @@ import cv2
 import json
 import os
 import sys
-import torch
 import time
-from ultralytics import YOLO
+import torch
+
 from datetime import datetime
+from ultralytics import YOLO
+
 
 def create_log_file():
     log_dir = "detection_logs"
@@ -13,10 +15,12 @@ def create_log_file():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return os.path.join(log_dir, f"{timestamp}_detection_log.txt")
 
+
 def log_message(log_file, message):
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a") as f:
         f.write(f"[{current_time}] {message}\n")
+
 
 def save_detection_results(image_paths, predictions, image_output_path, original_images_dir, json_output_path, log_file):
     for index, (image_path, result) in enumerate(zip(image_paths, predictions)):
@@ -36,7 +40,6 @@ def save_detection_results(image_paths, predictions, image_output_path, original
             class_dict = result.names
             confidences, labels, coordinates = result.boxes.conf.cpu().numpy(), result.boxes.cls.cpu().numpy(), result.boxes.xyxy.cpu().numpy()
             
-            # result.save(f"{os.path.join(image_output_path, image_name)}.JPG")
 
             json_results = {}
             json_results["image"] = os.path.basename(image_path)
@@ -57,18 +60,6 @@ def save_detection_results(image_paths, predictions, image_output_path, original
                 image_to_save = image
                 save_message = f"Original image '{image_filename}' has been saved to '{output_path}'."
                 
-                # print(f" - No Detections in Image {image_name}")
-                # bounding_box = {}
-                # bounding_box["label"] = None
-                # bounding_box["confidence"] = None
-                # bounding_box["bbox"] = []
-                # json_results["boxes"].append(bounding_box)
-
-                # with open(f"{os.path.join(json_output_path, image_name)}.json", "w") as json_file:
-                #     json.dump(json_results, json_file, indent = 4)
-                
-                # print(f"  {json_results}\n")
-                # continue
             else:
                 for i in range(len(confidences)):
                     conf = round(confidences[i], 2)
@@ -142,43 +133,8 @@ def save_detection_results(image_paths, predictions, image_output_path, original
         except Exception as e:
             log_message(log_file, f"Error processing image: {str(e)}")
 
-            # stoat_indices = (labels == 7).nonzero(as_tuple = False)
-            # if len(stoat_indices) == 0:
-            #     max_conf_index = torch.argmax(confidences)
-            #     selected_conf = confidences[max_conf_index].item()
-            #     selected_label = class_dict[labels[max_conf_index].item()]
-            #     selected_bbox = coordinates[max_conf_index].tolist()[0][0]
 
-            #     bounding_box = {}
-            #     bounding_box["label"] = selected_label
-            #     bounding_box["confidence"] = selected_conf
-            #     bounding_box["bbox"] = selected_bbox
-            #     json_results["boxes"].append(bounding_box)
 
-            #     with open(f"{os.path.join(json_output_path, image_name)}.json", "w") as json_file:
-            #         json.dump(json_results, json_file, indent = 4)
-
-            #     print(f" - Image {image_name}")
-            #     print(f"  {json_results}\n")
-
-            # else:
-            #     stoat_conf = confidences[stoat_indices]
-            #     max_stoat_conf = torch.max(stoat_conf)
-            #     max_stoat_conf_index = (confidences == max_stoat_conf).nonzero(as_tuple = False)
-            #     selected_label = class_dict[labels[max_stoat_conf_index].item()]
-            #     selected_bbox = coordinates[max_stoat_conf_index].tolist()[0][0]
-
-            #     bounding_box = {}
-            #     bounding_box["label"] = selected_label
-            #     bounding_box["confidence"] = max_stoat_conf.item()
-            #     bounding_box["bbox"] = selected_bbox
-            #     json_results["boxes"].append(bounding_box)
-                
-            #     with open(f"{os.path.join(json_output_path, image_name)}.json", "w") as json_file:
-            #         json.dump(json_results, json_file, indent = 4)
-                
-            #     print(f" - Image {image_name}")
-            #     print(f"  {json_results}\n")
 
 def main():
     if len(sys.argv) != 4:
@@ -192,37 +148,10 @@ def main():
     log_file = create_log_file()
 
     try:
-        DEVICE = "cuda"  # Change to "cuda" if using GPU
-        yolo_model = YOLO("best_50_GPU.pt").to(DEVICE)
+        DEVICE = "cuda"
+        yolo_model = YOLO("Detector_GPU.pt").to(DEVICE)
     except Exception as e:
         log_message(log_file, f"Error processing image: {str(e)}")
-
-    # DEVICE = "cpu"
-    # batch_size = 16
-    # yolo = YOLO("best_50.pt").to(DEVICE)
-
-    # # Construct the source path.
-    # root = "/home/ywu840/Capstone"
-    # source_dir = "Original"
-    # source_path = os.path.join(root, source_dir)
-    
-    # # Construct the destination path.
-    # destination_dir = "Detection_Results"
-    # output_dir = "Bbox_Images"
-    # output_path = os.path.join(root, destination_dir, output_dir)
-    # json_output_path = os.path.join(root, destination_dir)
-    # os.makedirs(output_path, exist_ok = True)
-    # os.makedirs(json_output_path, exist_ok = True)
-    
-    # Construct a list of image paths.
-    # image_paths_list = []
-    # for file in sorted(os.listdir(source_path)):
-    #     if file.lower().endswith(('.jpg', '.jpeg', '.png')):
-    #         image_path = os.path.join(source_path, file)
-    #         image_paths_list.append(image_path)
-
-    # num_of_images = len(image_paths_list)
-    # print(f"\nTotal: {num_of_images} images\n")
     
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
@@ -252,11 +181,10 @@ def main():
 
     while counter < num_of_images:
         process_images = image_paths_list[counter:min(counter + batch_size, num_of_images)]
-        # print(f"* [{counter} - {min(counter + batch_size, num_of_images)}]\n")
         preds = yolo_model(process_images, verbose = False)
         save_detection_results(image_paths = process_images, predictions = preds, 
                                image_output_path = output_dir, original_images_dir = original_images_dir, 
-                               json_output_path = json_output_dir, log_file=log_file)
+                               json_output_path = json_output_dir, log_file = log_file)
         
         print(f"PROCESS: {min(counter + batch_size, num_of_images)}/{num_of_images}", flush=True)
         counter += batch_size
@@ -266,8 +194,6 @@ def main():
     log_message(log_file, f"Total processing time: {total_time:.2f} seconds")
 
     print("STATUS: DONE", flush=True)
-
-    # print(f"\nFinished {num_of_images} images!\n")
     
 
 main()

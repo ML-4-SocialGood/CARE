@@ -1,31 +1,37 @@
+import glob
+import json
+import numpy as np
+import os
+import shutil
 import sys
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as T
-from config import cfg
-import json
-import os
-import glob
-import shutil
-import numpy as np
-from PIL import Image
-from datetime import datetime
 
-# Function to create a log file with a timestamp
+from config import cfg
+from datetime import datetime
+from PIL import Image
+
+
 def create_log_file():
+    """
+    Create a log file with a timestamp.
+    """
     log_dir = "reid_logs"
     os.makedirs(log_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return os.path.join(log_dir, f"{timestamp}_reid_log.txt")
+
 
 def log_message(log_file, message):
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a") as f:
         f.write(f"[{current_time}] {message}\n")
 
+
 def load_and_preprocess_image(file_path):
     """
-    Load and preprocess image.
+    Load and preprocess image with the configrations.
     """
     img = Image.open(file_path).convert("RGB")
 
@@ -35,9 +41,9 @@ def load_and_preprocess_image(file_path):
         T.Normalize(mean = cfg.INPUT.PIXEL_MEAN, std = cfg.INPUT.PIXEL_STD)
     ])                                 # define transformations
 
-    img = image_transforms(img)        # apply transformations
-    img = img.unsqueeze(0)             # add batch dimension (i.e., [1, 3, 256, 128])
-    return img
+    image = image_transforms(img)      # apply transformations
+    image = image.unsqueeze(0)         # add batch dimension (i.e., [1, 3, 256, 128])
+    return image
 
 
 def compute_distances(model, query_image, gallery_images, is_duplicate, device):
@@ -58,14 +64,10 @@ def compute_distances(model, query_image, gallery_images, is_duplicate, device):
 
     if is_duplicate:
         list_of_dist[np.argmin(list_of_dist)] = list_of_dist[np.argmax(list_of_dist)] + 1
-    
     return list_of_dist
 
 
 def process_dist_mat(dist_mat):
-    """
-    Process the distance matrix to count the number of individuals.
-    """
     output_dict = dict()
     number_of_images = len(dist_mat)
     keys = [-1] * number_of_images
@@ -73,9 +75,6 @@ def process_dist_mat(dist_mat):
     for r in range(len(dist_mat)):
         row = dist_mat[r]
         matched_index = np.argmin(row)
-        # print(f"Image Index: {r}")
-        # print(f"Distance: {row}")
-        # print(f"Matched Image Index: {matched_index}")
         
         if keys[r] == -1 and keys[matched_index] == -1:
             output_dict[counter] = [r]
@@ -91,9 +90,45 @@ def process_dist_mat(dist_mat):
         elif keys[r] != -1 and keys[matched_index] == -1:
             output_dict[keys[r]].append(matched_index)
             keys[matched_index] = keys[r]
-        # print(f"Output: {output_dict}\n")
+    return output_dict
+
+
+def process_dist_mat_v2(dist_mat):
+    """
+    Process the distance matrix to count the number of individuals.
+    """
+    number_of_images = len(dist_mat)
+    keys = np.array([-1] * number_of_images)
+    
+    for r in range(len(dist_mat)):
+        row = dist_mat[r]
+        min_dist = np.min(row)
+        candidates_bool = np.abs(row - min_dist) <= 0.05
+        candidates_index = np.where(candidates_bool)[0]
+        candidates_key = keys[candidates_index]
+        current_counter = np.max(keys)
         
-    # print(keys)
+        if keys[r] != -1:
+            keys[candidates_index] = keys[r]
+
+        elif keys[r] == -1 and np.all(candidates_key == -1):
+            keys[r] = current_counter + 1
+            keys[candidates_index] = current_counter + 1
+        
+        elif keys[r] == -1 and np.any(candidates_key != -1):
+            min_pos_key = np.min(candidates_key[candidates_key != -1])
+            selected_indices = candidates_index[np.where(candidates_key != min_pos_key)[0]]
+            keys[r] = min_pos_key
+            keys[selected_indices] = min_pos_key
+        
+    aid = 0
+    output_dict = dict()
+    min_key, max_key = np.min(keys), np.max(keys)
+    for k in range(min_key, max_key + 1):
+        if k in keys:
+            if aid not in output_dict:
+                output_dict[aid] = list(np.where(keys == k)[0])
+                aid += 1
     return output_dict
 
 
@@ -113,7 +148,6 @@ def format_output_dict(image_paths, output_dict, rel_parent_path):
             list_of_img_paths.append(img_relative_path)
         if id not in output_dict_with_rel_paths:
             output_dict_with_rel_paths[id] = list_of_img_paths
-
     return output_dict_with_rel_paths
 
 
@@ -143,21 +177,6 @@ def show_results(q_img_paths, reid_dict, reid_output_dir, log_file):
 
     log_message(log_file, f"Re-identification results saved to JSON file: {json_output_path}")
 
-    
-    """
-    # Save same individuals to one directory.
-    for id, list_of_imgs in reid_dict.items():
-        id_dir = os.path.join("./Reid_results", id)
-        if not os.path.exists(id_dir):
-            os.makedirs(id_dir)
-            print(f"Directory '{id_dir}' is created.")
-        for img in list_of_imgs:
-            img_dir = os.path.join("./Stoat/query", img)
-            id_img_dir = os.path.join(id_dir, img)
-            shutil.copyfile(img_dir, id_img_dir)
-            print(f"  - Image '{img}' is appended to '{id_dir}'")
-        print()
-    """
 
 def crop_image_from_json(image_path, json_path, output_dir, original_root, log_file):
     with open(json_path, "r") as f:
@@ -196,6 +215,7 @@ def crop_image_from_json(image_path, json_path, output_dir, original_root, log_f
         cropped_img.save(cropped_img_path)
         log_message(log_file, f"Saved cropped image: {cropped_img_path}")
 
+
 def process_images_in_folder(image_dir, json_dir, output_dir, log_file):
     for root, _, files in os.walk(image_dir):
         for file in files:
@@ -209,6 +229,7 @@ def process_images_in_folder(image_dir, json_dir, output_dir, log_file):
                     crop_image_from_json(image_path, json_path, output_dir, image_dir, log_file)
                 else:
                     log_message(log_file, f"JSON file not found for image: {file}")
+
 
 def clear_cropped_folder(cropped_dir, log_file):
     for root, dirs, files in os.walk(cropped_dir):
@@ -226,6 +247,9 @@ def clear_cropped_folder(cropped_dir, log_file):
                 log_message(log_file, f"Deleted directory: {dir_path}")
             except Exception as e:
                 log_message(log_file, f"Error deleting directory {dir_path}: {e}")
+
+
+
 
 def main():
     if len(sys.argv) != 5:
@@ -255,8 +279,8 @@ def main():
     cfg.merge_from_list([])
     cfg.freeze()
 
+    # Load the traced reid model.
     try:
-        # Load the traced model (CARE).
         CARE_Model = torch.jit.load(saved_model_path)
         CARE_Model = CARE_Model.to(DEVICE)
         CARE_Model.eval()    # set the model in evaluation mode
@@ -269,19 +293,11 @@ def main():
         print("STATUS: DONE", flush=True)
         sys.exit(0)
     
-    # Load and preprocess all gallery images.
-    # gallery_images = []
-    # for g_img_path in gallery_image_paths:
-    #     gallery_images.append(load_and_preprocess_image(g_img_path))
-    # print(f"Number of Gallery Images: {len(gallery_images)}\n")
-    
     distance_mat = []    # a distance matrix
     cropped_images = [load_and_preprocess_image(img_path) for img_path in cropped_image_paths]
     log_message(log_file, cropped_images)
 
     print("STATUS: PROCESSING", flush=True)
-
-    # distance_mat = [None] * len(cropped_image_paths)
 
     total_images = len(cropped_image_paths)
 
@@ -290,15 +306,13 @@ def main():
         dist = compute_distances(model = CARE_Model, 
                                  query_image = cropped_images[index], 
                                  gallery_images = cropped_images, 
-                                #  query_path = query_image_paths[index], 
-                                #  gallery_paths = gallery_image_paths, 
                                  is_duplicate = True,    # check whether the query image has a duplicate in Gallery
                                  device = DEVICE)
         distance_mat.append(dist)
 
         print(f"PROCESS: {index+1}/{total_images}", flush=True)
 
-    id_dict = process_dist_mat(distance_mat)
+    id_dict = process_dist_mat_v2(distance_mat)
 
     log_message(log_file, id_dict)
     log_message(log_file, output_dir)

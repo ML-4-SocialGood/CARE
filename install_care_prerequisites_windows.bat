@@ -1,5 +1,11 @@
 @echo off
 
+:: Call Python script and capture output
+for /f "tokens=1,2 delims= " %%A in ('python parse_json_to_bat.py') do (
+    set "DEVICE=%%A"
+    set "CUDA=%%B"
+)
+
 echo CARE Web Platform - Prerequisites Installer
 echo The installation will begin...
 
@@ -22,7 +28,13 @@ if %errorlevel% neq 0 (
 start cmd.exe /K "cd %USERPROFILE%\anaconda3\Scripts && activate.bat %USERPROFILE%\anaconda3 && conda init && exit"
 
 echo Prerequisites installation has been completed successfully.
-echo "Don't forget to place the two model files 'best_50.pt' and 'CARE_Traced.pt' in '<project directory>\backend\ai_server'."
+
+if "%DEVICE%"=="CPU" (
+    echo "Don't forget to place the two model files 'Detector.pt' and 'CARE_Traced.pt' in '<project directory>\backend\ai_server'."
+) else (
+    echo "Don't forget to place the two model files 'Detector_GPU.pt' and 'CARE_Traced_GPUv.pt' in '<project directory>\backend\ai_server'."
+)
+
 echo Press any key to close this window...
 pause >nul
 exit

@@ -141,7 +141,7 @@ dist
 
 frontend/H/
 /backend/ai_server/detection_log.txt
-backend/ai_server/best_50.pt
+backend/ai_server/Detector.pt
 /backend/ai_server/ReID_log.txt
 /backend/ai_server/.idea
 /backend/ai_server/__pycache__
@@ -150,4 +150,4 @@ backend/ai_server/best_50.pt
 /backend/ai_server/reid_logs/
 /backend/ai_server/CARE_Traced.pt
 /backend/ai_server/CARE_Traced_GPUv.pt
-/backend/ai_server/best_50_GPU.pt
+/backend/ai_server/Detector_GPU.pt

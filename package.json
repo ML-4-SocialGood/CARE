@@ -2,5 +2,8 @@
   "dependencies": {
     "pagination": "^0.4.6",
     "react-paginate": "^8.2.0"
+  },
+  "devDependencies": {
+    "electron-vite": "^3.1.0"
   }
 }

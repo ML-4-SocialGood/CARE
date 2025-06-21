@@ -37,8 +37,8 @@ def load_and_preprocess_image(file_path):
     img = Image.open(file_path).convert("RGB")
 
     image_transforms = T.Compose([
-        T.Resize(cfg.INPUT.SIZE_TEST), 
-        T.ToTensor(), 
+        T.Resize(cfg.INPUT.SIZE_TEST),
+        T.ToTensor(),
         T.Normalize(mean = cfg.INPUT.PIXEL_MEAN, std = cfg.INPUT.PIXEL_STD)
     ])                                 # define transformations
 
@@ -54,7 +54,7 @@ def compute_distances(model, query_image, gallery_images, is_duplicate, device):
     list_of_dists = []
     query_embedding = model(query_image.to(device))    # forward pass to get the embedding of the query image ([1, 1280])
     query_cls = query_embedding[:, 768:]    # extract the [CLS] token ([1, 512])
-    
+
     # Calculate the similarity and distance.
     for index in range(len(gallery_images)):
         gallery_embedding = model(gallery_images[index].to(device))    # gallery image embedding ([1, 1280])
@@ -62,7 +62,7 @@ def compute_distances(model, query_image, gallery_images, is_duplicate, device):
         similarity = F.cosine_similarity(query_cls, gallery_cls)
         dist = 1 - similarity
         list_of_dists.append(dist.cpu().detach().numpy()[0])
-    
+
     list_of_dists = np.array(list_of_dists)
 
     if is_duplicate:
@@ -100,7 +100,7 @@ def process_dist_mat_v2(dist_mat):
     """
     number_of_images = len(dist_mat)
     keys = np.array([-1] * number_of_images)
-    
+
     for r in range(len(dist_mat)):
         row = dist_mat[r]
         min_dist = np.min(row)
@@ -108,20 +108,20 @@ def process_dist_mat_v2(dist_mat):
         candidates_index = np.where(candidates_bool)[0]
         candidates_key = keys[candidates_index]
         current_counter = np.max(keys)
-        
+
         if keys[r] != -1:
             keys[candidates_index] = keys[r]
 
         elif keys[r] == -1 and np.all(candidates_key == -1):
             keys[r] = current_counter + 1
             keys[candidates_index] = current_counter + 1
-        
+
         elif keys[r] == -1 and np.any(candidates_key != -1):
             min_pos_key = np.min(candidates_key[candidates_key != -1])
             selected_indices = candidates_index[np.where(candidates_key != min_pos_key)[0]]
             keys[r] = min_pos_key
             keys[selected_indices] = min_pos_key
-        
+
     aid = 0
     output_dict = dict()
     min_key, max_key = np.min(keys), np.max(keys)
@@ -244,17 +244,7 @@ def clear_cropped_folder(cropped_dir, log_file):
                 log_message(log_file, f"Error deleting directory {dir_path}: {e}")
 
 
-
-
-def main():
-    if len(sys.argv) != 5:
-        print("Usage: script.py <image_dir> <json_dir> <output_dir> <reid_output_dir>")
-        sys.exit(1)
-
-    image_dir = sys.argv[1]
-    json_dir = sys.argv[2]
-    output_dir = sys.argv[3]
-    reid_output_dir = sys.argv[4]
+def run(image_dir, json_dir, output_dir, reid_output_dir, cfg_file_path, saved_model_path):
 
     log_file = create_log_file()
     clear_cropped_folder(output_dir, log_file)
@@ -264,8 +254,6 @@ def main():
     process_images_in_folder(image_dir, json_dir, output_dir, log_file)
 
     DEVICE = "cpu"
-    cfg_file_path = "vit_care.yml"
-    saved_model_path = "CARE_Traced.pt"
 
     # Read and import the cfg file.
     cfg.merge_from_file(cfg_file_path)
@@ -323,7 +311,7 @@ def main():
         else:
             end_idx = (i + 1) * chunk_size
         thread_indices = indices[start_idx:end_idx]
-        
+
         # 4. Pass total_images and progress_lock to worker threads (MODIFICATION).
         t = threading.Thread(target=worker, args=(thread_indices, total_images, progress_lock))
         threads.append(t)
@@ -341,4 +329,21 @@ def main():
 
     print("STATUS: DONE", flush=True)
 
-main()
+
+def main():
+    if len(sys.argv) != 5:
+        print("Usage: script.py <image_dir> <json_dir> <output_dir> <reid_output_dir>")
+        sys.exit(1)
+
+    image_dir = sys.argv[1]
+    json_dir = sys.argv[2]
+    output_dir = sys.argv[3]
+    reid_output_dir = sys.argv[4]
+    cfg_file_path = "vit_care.yml"
+    saved_model_path = "CARE_Traced.pt"
+
+    run(image_dir, json_dir, output_dir, reid_output_dir, cfg_file_path, saved_model_path)
+
+
+if __name__ == "__main__":
+    main()

@@ -36,8 +36,8 @@ def load_and_preprocess_image(file_path):
     img = Image.open(file_path).convert("RGB")
 
     image_transforms = T.Compose([
-        T.Resize(cfg.INPUT.SIZE_TEST), 
-        T.ToTensor(), 
+        T.Resize(cfg.INPUT.SIZE_TEST),
+        T.ToTensor(),
         T.Normalize(mean = cfg.INPUT.PIXEL_MEAN, std = cfg.INPUT.PIXEL_STD)
     ])                                 # define transformations
 
@@ -52,14 +52,14 @@ def compute_distances(model, query_image, gallery_images, is_duplicate, device):
     """
     list_of_dist = []
     query_embedding = model(query_image.to(device))[2]    # forward pass to get the embedding of the query image
-    
+
     # Calculate the similarity and distance.
     for index in range(len(gallery_images)):
         gallery_embedding = model(gallery_images[index].to(device))[2]
         similarity = F.cosine_similarity(query_embedding, gallery_embedding)
         dist = 1 - similarity
         list_of_dist.append(dist.cpu().detach().numpy()[0])
-    
+
     list_of_dist = np.array(list_of_dist)
 
     if is_duplicate:
@@ -75,18 +75,18 @@ def process_dist_mat(dist_mat):
     for r in range(len(dist_mat)):
         row = dist_mat[r]
         matched_index = np.argmin(row)
-        
+
         if keys[r] == -1 and keys[matched_index] == -1:
             output_dict[counter] = [r]
             keys[r] = counter
             output_dict[keys[r]].append(matched_index)
             keys[matched_index] = counter
             counter += 1
-            
+
         elif keys[r] == -1 and keys[matched_index] != -1:
             output_dict[keys[matched_index]].append(r)
             keys[r] = keys[matched_index]
-        
+
         elif keys[r] != -1 and keys[matched_index] == -1:
             output_dict[keys[r]].append(matched_index)
             keys[matched_index] = keys[r]
@@ -99,7 +99,7 @@ def process_dist_mat_v2(dist_mat):
     """
     number_of_images = len(dist_mat)
     keys = np.array([-1] * number_of_images)
-    
+
     for r in range(len(dist_mat)):
         row = dist_mat[r]
         min_dist = np.min(row)
@@ -107,20 +107,20 @@ def process_dist_mat_v2(dist_mat):
         candidates_index = np.where(candidates_bool)[0]
         candidates_key = keys[candidates_index]
         current_counter = np.max(keys)
-        
+
         if keys[r] != -1:
             keys[candidates_index] = keys[r]
 
         elif keys[r] == -1 and np.all(candidates_key == -1):
             keys[r] = current_counter + 1
             keys[candidates_index] = current_counter + 1
-        
+
         elif keys[r] == -1 and np.any(candidates_key != -1):
             min_pos_key = np.min(candidates_key[candidates_key != -1])
             selected_indices = candidates_index[np.where(candidates_key != min_pos_key)[0]]
             keys[r] = min_pos_key
             keys[selected_indices] = min_pos_key
-        
+
     aid = 0
     output_dict = dict()
     min_key, max_key = np.min(keys), np.max(keys)
@@ -157,7 +157,7 @@ def show_results(q_img_paths, reid_dict, reid_output_dir, log_file):
     """
     if len(reid_dict) == 1:
         log_message(log_file, f"The CARE model successfully identified {len(reid_dict)} individual in the dataset.")
-    else: 
+    else:
         log_message(log_file, f"The CARE model successfully identified {len(reid_dict)} individuals in the dataset.")
     log_message(log_file, "\nRe-identification Result:")
     log_message(log_file, str(reid_dict))
@@ -249,17 +249,7 @@ def clear_cropped_folder(cropped_dir, log_file):
                 log_message(log_file, f"Error deleting directory {dir_path}: {e}")
 
 
-
-
-def main():
-    if len(sys.argv) != 5:
-        print("Usage: script.py <image_dir> <json_dir> <output_dir> <reid_output_dir>")
-        sys.exit(1)
-
-    image_dir = sys.argv[1]
-    json_dir = sys.argv[2]
-    output_dir = sys.argv[3]
-    reid_output_dir = sys.argv[4]
+def run(image_dir, json_dir, output_dir, reid_output_dir, cfg_file_path, saved_model_path):
 
     log_file = create_log_file()
     clear_cropped_folder(output_dir, log_file)
@@ -269,10 +259,7 @@ def main():
     process_images_in_folder(image_dir, json_dir, output_dir, log_file)
 
     log_message(log_file, f'{torch.cuda.is_available()}')
-    
     DEVICE = "cuda"
-    cfg_file_path = "vit_care.yml"
-    saved_model_path = "CARE_Traced_GPUv.pt"
 
     # Read and import the cfg file.
     cfg.merge_from_file(cfg_file_path)
@@ -292,7 +279,7 @@ def main():
         log_message(log_file, "No cropped images found. Exiting ReID processing.")
         print("STATUS: DONE", flush=True)
         sys.exit(0)
-    
+
     distance_mat = []    # a distance matrix
     cropped_images = [load_and_preprocess_image(img_path) for img_path in cropped_image_paths]
     log_message(log_file, cropped_images)
@@ -303,9 +290,9 @@ def main():
 
     # Compute the similarity of each matched image pair.
     for index in range(total_images):
-        dist = compute_distances(model = CARE_Model, 
-                                 query_image = cropped_images[index], 
-                                 gallery_images = cropped_images, 
+        dist = compute_distances(model = CARE_Model,
+                                 query_image = cropped_images[index],
+                                 gallery_images = cropped_images,
                                  is_duplicate = True,    # check whether the query image has a duplicate in Gallery
                                  device = DEVICE)
         distance_mat.append(dist)
@@ -317,7 +304,7 @@ def main():
     log_message(log_file, id_dict)
     log_message(log_file, output_dir)
     log_message(log_file, cropped_image_paths)
-    
+
     output_dict = format_output_dict(cropped_image_paths, id_dict, output_dir)
 
     show_results(cropped_image_paths, output_dict, reid_output_dir, log_file)
@@ -326,4 +313,19 @@ def main():
 
     print("STATUS: DONE", flush=True)
 
-main()
+
+def main():
+    if len(sys.argv) != 5:
+        print("Usage: script.py <image_dir> <json_dir> <output_dir> <reid_output_dir>")
+        sys.exit(1)
+    image_dir = sys.argv[1]
+    json_dir = sys.argv[2]
+    output_dir = sys.argv[3]
+    reid_output_dir = sys.argv[4]
+    cfg_file_path = "vit_care.yml"
+    saved_model_path = "CARE_Traced_GPUv.pt"
+    run(image_dir, json_dir, output_dir, reid_output_dir, cfg_file_path, saved_model_path)
+
+
+if __name__ == "__main__":
+    main()

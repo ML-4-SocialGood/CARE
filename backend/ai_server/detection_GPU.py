@@ -35,11 +35,11 @@ def save_detection_results(image_paths, predictions, image_output_path, original
             if image is None:
                 log_message(log_file, f"Failed to read image '{image_path}'.")
                 return None
-            
+
             image_name = os.path.splitext(os.path.basename(image_path))[0]
             class_dict = result.names
             confidences, labels, coordinates = result.boxes.conf.cpu().numpy(), result.boxes.cls.cpu().numpy(), result.boxes.xyxy.cpu().numpy()
-            
+
 
             json_results = {}
             json_results["image"] = os.path.basename(image_path)
@@ -59,7 +59,7 @@ def save_detection_results(image_paths, predictions, image_output_path, original
                 })
                 image_to_save = image
                 save_message = f"Original image '{image_filename}' has been saved to '{output_path}'."
-                
+
             else:
                 for i in range(len(confidences)):
                     conf = round(confidences[i], 2)
@@ -110,13 +110,13 @@ def save_detection_results(image_paths, predictions, image_output_path, original
                         "confidence": 0,
                         "bbox": []
                     }
-                
+
                 json_results['boxes'] = [selected_detection]
                 with open(fin_json_output_path, "w") as f:
                     json.dump(json_results, f, indent=4)
 
                 log_message(log_file, f"Cropped info for '{json_results['image']}' has been saved to '{fin_json_output_path}'.")
-            
+
             else:
                 relative_path = os.path.relpath(image_path, original_images_dir)
                 json_filename = os.path.splitext(relative_path)[0] + ".json"
@@ -129,11 +129,9 @@ def save_detection_results(image_paths, predictions, image_output_path, original
                 with open(fin_json_output_path, "w") as f:
                     json.dump(json_results, f, indent=4)
                 log_message(log_file, f"No detections for '{image_path}'. Empty JSON saved to '{fin_json_output_path}'.")
-    
+
         except Exception as e:
             log_message(log_file, f"Error processing image: {str(e)}")
-
-
 
 
 def main():
@@ -144,15 +142,21 @@ def main():
     original_images_dir = sys.argv[1]
     output_dir = sys.argv[2]
     json_output_dir = sys.argv[3]
+    yolo_model_path = "Detector_GPU.pt"
+
+    run(original_images_dir, output_dir, json_output_dir, yolo_model_path)
+
+
+def run(original_images_dir, output_dir, json_output_dir, yolo_model_path):
 
     log_file = create_log_file()
 
     try:
         DEVICE = "cuda"
-        yolo_model = YOLO("Detector_GPU.pt").to(DEVICE)
+        yolo_model = YOLO(yolo_model_path).to(DEVICE)
     except Exception as e:
         log_message(log_file, f"Error processing image: {str(e)}")
-    
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
     if not os.path.exists(json_output_dir):
@@ -176,16 +180,16 @@ def main():
 
     counter = 0
     batch_size = 16
-    
+
     print("STATUS: BEGIN", flush=True)
 
     while counter < num_of_images:
         process_images = image_paths_list[counter:min(counter + batch_size, num_of_images)]
         preds = yolo_model(process_images, verbose = False)
-        save_detection_results(image_paths = process_images, predictions = preds, 
-                               image_output_path = output_dir, original_images_dir = original_images_dir, 
+        save_detection_results(image_paths = process_images, predictions = preds,
+                               image_output_path = output_dir, original_images_dir = original_images_dir,
                                json_output_path = json_output_dir, log_file = log_file)
-        
+
         print(f"PROCESS: {min(counter + batch_size, num_of_images)}/{num_of_images}", flush=True)
         counter += batch_size
 
@@ -194,6 +198,6 @@ def main():
     log_message(log_file, f"Total processing time: {total_time:.2f} seconds")
 
     print("STATUS: DONE", flush=True)
-    
 
-main()
+if __name__ == "__main__":
+    main()

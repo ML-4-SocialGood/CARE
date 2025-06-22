@@ -21,9 +21,18 @@
     "build:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^2.3.0",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
-    "electron-updater": "^6.3.9"
+    "@reduxjs/toolkit": "^2.8.2",
+    "classnames": "^2.5.1",
+    "clsx": "^2.1.1",
+    "electron-updater": "^6.3.9",
+    "formik": "^2.4.6",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.6.2",
+    "redux-persist": "^6.0.0",
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",

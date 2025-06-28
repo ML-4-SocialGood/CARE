@@ -8,7 +8,6 @@ import { Auth0Provider } from "@auth0/auth0-react";
 import { Provider } from "react-redux";
 import { store, persistor } from "../configureStore.js";
 import { PersistGate } from "redux-persist/integration/react";
-import AuthProvider from "./hook/auth.jsx";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     {/* TO DO: Hide these and fetch from the backend */}
@@ -24,9 +23,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     >
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
+          <App />
         </PersistGate>
       </Provider>
     </Auth0Provider>

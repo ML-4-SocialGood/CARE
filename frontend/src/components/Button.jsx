@@ -1,12 +1,9 @@
 /** @format */
 
-import React, { useContext, useEffect } from "react";
 import PropTypes from "prop-types";
 import "./button.css";
 import clsx from "clsx";
-import { useAuth0 } from "@auth0/auth0-react";
-import { Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "../hook/auth";
+import { Link } from "react-router-dom";
 
 export function Button({
   variant = "none",
@@ -49,52 +46,4 @@ Button.propTypes = {
   children: PropTypes.node,
   variant: PropTypes.string, // primary or secondary
   onClick: PropTypes.func,
-};
-
-export function SignInButton({ className, children, ...props }) {
-  const { loginWithRedirect } = useAuth0();
-  const navigate = useNavigate();
-
-  return (
-    <Button
-      className={className}
-      //onClick={() => loginWithRedirect()}
-      onClick={() => navigate("/signin")}
-      {...props}
-    >
-      {children}
-    </Button>
-  );
-}
-
-SignInButton.propTypes = {
-  className: PropTypes.string,
-  children: PropTypes.node,
-};
-
-export const SignOutButton = ({ className, children, ...props }) => {
-  //const { logout } = useAuth0();
-  const authContext = useContext(AuthContext);
-  const navigate = useNavigate();
-  return (
-    <Button
-      className={className}
-      onClick={() =>
-        //logout({ logoutParams: { returnTo: window.location.origin } })
-        {
-          authContext.setAuthenticated(false);
-          navigate("/");
-        }
-        
-      }
-      {...props}
-    >
-      {children}
-    </Button>
-  );
-};
-
-SignOutButton.propTypes = {
-  className: PropTypes.string,
-  children: PropTypes.node,
 };

@@ -12,16 +12,12 @@
   "description": "",
   "dependencies": {
     "archiver": "^7.0.1",
-    "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
-    "body-parser": "^1.20.2",
-    "capstone-project-team-39-backend": "file:",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "fs-extra": "^11.2.0",
-    "jsonwebtoken": "^9.0.2",
     "mime-types": "^2.1.35",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
@@ -29,8 +25,7 @@
     "path": "^0.12.7",
     "sequelize": "^6.37.3",
     "sqlite3": "^5.1.7",
-    "unimported": "^1.31.0",
-    "unzipper": "^0.12.3"
+    "unimported": "^1.31.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

@@ -351,7 +351,7 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
         ) : (
           <div className="uploads-file-list-warning">
             You can check your detected images here. <br></br>Please select a
-            folder from the folder tree.
+            folder from the folder tree. <br></br>Please select a species via the Species Filter before running ReID. 
           </div>
         )}
       </div>

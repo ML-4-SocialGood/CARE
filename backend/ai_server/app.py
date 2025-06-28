@@ -12,7 +12,7 @@ from ultralytics import YOLO
 
 
 app = Flask(__name__)
-processes = {}    # global dictionary to track processes by user_id
+global_process = None # Tracks running subprocess.
 
 # Load JSON file and extract the global configrations.
 with open("./config/install_config.json", "r") as file:
@@ -32,31 +32,31 @@ def get_python_command():
         return "python3"    # use "python3" for Linux/macOS
 
 
-def kill_existing_process(user_id):
+def kill_existing_process():
     """
-    Kill the existing process and its children for a given user_id.
+    Kill the existing process and its children.
     """
-    user_id = int(user_id)
-    if user_id in processes:
-        parent_process = processes[user_id]
-        if parent_process.poll() is None:    # check if parent is still running
-            try:
-                parent = psutil.Process(parent_process.pid)
-                for child in parent.children(recursive=True):    # kill children
-                    child.kill()
-                parent.kill()    # kill parent
-                parent_process.wait()    # ensure it's terminated
-            except psutil.NoSuchProcess:
-                pass    # process might have already finished
+    global global_process
+    # subprocess.poll() returns None if the process is running.
+    if global_process and global_process.poll() is None:
+        try:
+            parent = psutil.Process(global_process.pid)
+            for child in parent.children(recursive=True):    # kill children
+                child.kill()
+            parent.kill()    # kill parent
+            global_process.wait()    # ensure it's terminated
+        except psutil.NoSuchProcess:
+            pass    # process might have already finished
 
-        processes.pop(int(user_id))    # remove it from the dictionary
+    global_process = None
 
 
-def run_detection(user_id):
-    # kill_existing_process(user_id)    # kill the process if already running
+def run_detection():
+    kill_existing_process()
+    global global_process
     python_command = get_python_command()
     current_dir = os.getcwd()
-    
+
     # Check the configrations for running detection.
     if device == "CPU":
         detection_script_filename = "detection.py"
@@ -66,26 +66,27 @@ def run_detection(user_id):
     # Run the Python script using Popen.
     if platform.system() == "Windows":
         creationflags = subprocess.CREATE_NEW_PROCESS_GROUP    # use this flag for Windows
-        process = subprocess.Popen([python_command, detection_script_filename, 
-                                    os.path.join(current_dir, "..", "temp", "image_detection_pending", str(user_id)), 
-                                    os.path.join(current_dir, "..", "data", "image_marked", str(user_id)), 
-                                    os.path.join(current_dir, "..", "data", "image_cropped_json", str(user_id))], 
-                                    stdout = subprocess.PIPE, 
-                                    stderr = subprocess.PIPE, 
-                                    text = True, 
+        process = subprocess.Popen([python_command, detection_script_filename,
+                                    os.path.join(current_dir, "..", "temp", "image_detection_pending", "1"),
+                                    os.path.join(current_dir, "..", "data", "image_marked", "1"),
+                                    os.path.join(current_dir, "..", "data", "image_cropped_json", "1")],
+                                    stdout = subprocess.PIPE,
+                                    stderr = subprocess.PIPE,
+                                    text = True,
                                     creationflags = creationflags)
     else:
-        process = subprocess.Popen([python_command, detection_script_filename, 
-                                    os.path.join(current_dir, "..", "temp", "image_detection_pending", str(user_id)), 
-                                    os.path.join(current_dir, "..", "data", "image_marked", str(user_id)), 
-                                    os.path.join(current_dir, "..", "data", "image_cropped_json", str(user_id))], 
-                                    stdout = subprocess.PIPE, 
-                                    stderr = subprocess.PIPE, 
-                                    text = True, 
+        process = subprocess.Popen([python_command, detection_script_filename,
+                                    os.path.join(current_dir, "..", "temp", "image_detection_pending", "1"),
+                                    os.path.join(current_dir, "..", "data", "image_marked", "1"),
+                                    os.path.join(current_dir, "..", "data", "image_cropped_json", "1")],
+                                    stdout = subprocess.PIPE,
+                                    stderr = subprocess.PIPE,
+                                    text = True,
                                     preexec_fn = os.setsid)    # use setsid to create new process group on Linux/macOS
 
-    # Store the process in the global dictionary.
-    processes[int(user_id)] = process
+    # Record process to terminate() can kill.
+    # Note: We rely on our local reference, as terminate() clears global_process.
+    global_process = process
 
     # Yield each line of output as it comes in.
     for line in process.stdout:
@@ -96,11 +97,10 @@ def run_detection(user_id):
     process.wait()
 
     # Remove the process from the global dictionary when finished.
-    processes.pop(int(user_id), None)
+    global_process = None
 
 
-def run_reid(user_id):
-    # kill_existing_process(user_id)    # kill the process if already running
+def run_reid():
     python_command = get_python_command()
     current_dir = os.getcwd()
 
@@ -111,17 +111,20 @@ def run_reid(user_id):
         reid_script_filename = "ReID_GPU.py"
 
     # Run the Python script using Popen.
-    process = subprocess.Popen([python_command, reid_script_filename, 
-                                os.path.join(current_dir, "..", "temp", "image_reid_pending", str(user_id)),    # <image_dir>
-                                os.path.join(current_dir, "..", "data", "image_cropped_json", str(user_id)),    # <json_dir>
-                                os.path.join(current_dir, "..", "temp", "image_cropped_reid_pending", str(user_id)),    # <output_dir>
-                                os.path.join(current_dir, "..", "data", "image_reid_output", str(user_id))],    # <reid_output_dir>
-                                stdout = subprocess.PIPE, 
-                                stderr = subprocess.PIPE, 
+    kill_existing_process()
+    global global_process
+    process = subprocess.Popen([python_command, reid_script_filename,
+                                os.path.join(current_dir, "..", "temp", "image_reid_pending", "1"),    # <image_dir>
+                                os.path.join(current_dir, "..", "data", "image_cropped_json", "1"),    # <json_dir>
+                                os.path.join(current_dir, "..", "temp", "image_cropped_reid_pending", "1"),    # <output_dir>
+                                os.path.join(current_dir, "..", "data", "image_reid_output", "1")],    # <reid_output_dir>
+                                stdout = subprocess.PIPE,
+                                stderr = subprocess.PIPE,
                                 text = True)
-    
-    # Store the process in the global dictionary.
-    processes[int(user_id)] = process
+
+    # Record process to terminate() can kill.
+    # Note: We rely on our local reference, as terminate() clears global_process.
+    global_process = process
 
     # Yield each line of output as it comes in.
     for line in process.stdout:
@@ -132,20 +135,20 @@ def run_reid(user_id):
     process.wait()
 
     # Remove the process from the global dictionary when finished.
-    processes.pop(int(user_id), None)
+    global_process = None
 
 
-@app.route('/ai_api/detection/<user_id>', methods=['GET'])
-def detection_endpoint(user_id):
-    return Response(run_detection(user_id), mimetype='text/html')
+@app.route('/ai_api/detection', methods=['GET'])
+def detection_endpoint():
+    return Response(run_detection(), mimetype='text/html')
 
-@app.route('/ai_api/reid/<user_id>', methods=['GET'])
-def reid_endpoint(user_id):
-    return Response(run_reid(user_id), mimetype='text/html')
+@app.route('/ai_api/reid', methods=['GET'])
+def reid_endpoint():
+    return Response(run_reid(), mimetype='text/html')
 
-@app.route('/ai_api/terminate/<user_id>', methods=['GET'])
-def terminate_endpoint(user_id):
-    kill_existing_process(user_id)
+@app.route('/ai_api/terminate', methods=['GET'])
+def terminate_endpoint():
+    kill_existing_process()
     return jsonify(message="Request was successful!"), 200
 
 if __name__ == '__main__':

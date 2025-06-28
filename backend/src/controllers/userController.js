@@ -16,7 +16,7 @@ const upload = multer({ dest: 'temp' });
 // Get current user profile
 exports.getUserProfile = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id, {
+    const user = await User.findByPk("1", {
       attributes: { exclude: ['password'] }
     });
 
@@ -32,78 +32,20 @@ exports.getUserProfile = async (req, res) => {
 
 // Update current user profile
 exports.updateUserProfile = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (email) {
-      const existingUserByEmail = await User.findOne({ where: { email } });
-      if (existingUserByEmail) {
-        if (existingUserByEmail.id !== req.user.id) {
-          return res.status(400).json({ message: 'Email is already taken.' });
-        }
-      }
-    }
-
-    const user = await User.findByPk(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
-    }
-
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      await user.update({ email, password: hashedPassword});
-      res.json({ message: 'User profile updated successfully.' });
-    } else {
-      await user.update({ email });
-      res.json({ message: 'User profile updated successfully.' });
-    }
-    
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  return res.status(400).json({ message: 'Unsupported.' });
 };
-
-// // Get current user's all uploaded images
-// exports.getAllImages = async (req, res) => {
-//   try {
-//     const images = await Image.findAll({ where: { userId: req.user.id } });
-//     res.json(images);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
-// // Get current user's uploaded image by image ID
-// exports.getImageById = async (req, res) => {
-//   try {
-//     const { imageId } = req.params;
-//     const image = await Image.findOne({ where: { id: imageId, userId: req.user.id } });
-
-//     if (!image) {
-//       return res.status(404).json({ error: 'Image not found.' });
-//     }
-
-//     res.json(image);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
 
 exports.browseImage = async (req, res) => {
   try {
     const { date, folderPath = '' } = req.query; // Query parameters: date and path
-    const userIdFolder = req.user.id + "";
+    const userIdFolder = "1";
     let baseDir, targetDir;
-    
+
     if (!date) {
-      // const userIdFolder = req.user.id + "";
       baseDir = path.join(__dirname, '../../data/image_uploaded', userIdFolder);
       targetDir = path.resolve(baseDir); // Resolve the full path
       fs.ensureDirSync(targetDir);
-    }
-    else {
-      // const userIdFolder = req.user.id + "";
+    } else {
       baseDir = path.join(__dirname, '../../data/image_uploaded', userIdFolder, date);
       targetDir = path.resolve(baseDir, folderPath); // Resolve the full path
       fs.ensureDirSync(targetDir);
@@ -146,12 +88,12 @@ exports.browseImage = async (req, res) => {
 exports.getImagePaths = async (req, res) => {
   try {
     const { path: dirPath = "" } = req.query;
-    const userIdFolder = req.user.id + "";
+    const userIdFolder = "1";
     const baseDir = path.join(__dirname, '../../data/image_uploaded', userIdFolder);
     const targetDir = path.resolve(baseDir, dirPath); // Resolve the full path
-    
+
     fs.ensureDirSync(targetDir);
-  
+
     // Ensure the resolved path is still within the baseDir
     if (!targetDir.startsWith(baseDir)) {
       return res.status(403).json({ error: 'Invalid folder path.' });
@@ -178,7 +120,7 @@ exports.getImagePaths = async (req, res) => {
 
 exports.downloadSelectedGalleryImages = async (req, res) => {
   try {
-    const userIdFolder = req.user.id + "";
+    const userIdFolder = "1";
     const baseDir = path.join(__dirname, '../../data/image_uploaded', userIdFolder);
     const { selectedPaths } = req.body;
 
@@ -232,8 +174,8 @@ async function getFilePaths(dir, baseDir) {
     const stat = await fs.stat(filePath);
 
     if (stat && stat.isDirectory()) {
-        const subResults = await getFilePaths(filePath, baseDir);
-        results = results.concat(subResults);
+      const subResults = await getFilePaths(filePath, baseDir);
+      results = results.concat(subResults);
     } else {
       const relativePath = path.relative(baseDir, filePath);
       results.push(relativePath);
@@ -247,12 +189,12 @@ exports.viewImage = async (req, res) => {
   try {
     const { date, imagePath = '' } = req.query; // Query parameters: date and folder
     let baseDir, targetDir;
-    
+
     if (!date || !imagePath) {
       return res.status(400).json({ error: 'Missing date or imagePath query parameters.' });
     }
     else {
-      const userIdFolder = req.user.id + "";
+      const userIdFolder = "1";
       baseDir = path.join(__dirname, '../../data/image_uploaded', userIdFolder, date);
       targetDir = path.resolve(baseDir, imagePath); // Resolve the full path
     }
@@ -289,44 +231,6 @@ exports.viewImage = async (req, res) => {
   }
 }
 
-// // Upload folder with images, only accept zip, auto remove non-jpg files.
-// exports.uploadImage = [
-//   upload.single('folderZip'),
-//   async (req, res) => {
-//     try {
-//       if (!req.file) {
-//         return res.status(400).json({ error: 'No file was uploaded.' });
-//       }
-
-//       // Check if the file is a zip file
-//       const mimeType = mime.lookup(req.file.originalname);
-//       if (mimeType !== 'application/zip') {
-//         await fs.remove(uploadPath); // Clean up the uploaded file
-//         return res.status(400).json({ error: 'The uploaded file must be a zip file.' });
-//       }
-
-//       const uploadPath = req.file.path;
-//       const dateFolder = new Date().toISOString().split('T')[0].replace(/-/g, '');
-//       const userIdFolder = req.user.id + "";
-//       const extractionPath = path.join(__dirname, '../../data/image_uploaded', userIdFolder, dateFolder);
-
-//       // Unzip the file
-//       await fs.createReadStream(uploadPath)
-//         .pipe(unzipper.Extract({ path: extractionPath }))
-//         .promise();
-  
-//       // Iterate through the extracted files
-//       await cleanUpFiles(extractionPath);
-  
-//       // Remove the temporary zip file
-//       await fs.remove(uploadPath);
-  
-//       res.status(201).json({ message: 'Folder upload successfully, non-jpg files will be ignored.' });
-//     } catch (error) {
-//       res.status(500).json({ error: error.message });
-//     }
-// }];
-
 exports.uploadImage = [
   upload.single('file'), // Handle single file uploads
   async (req, res) => {
@@ -357,7 +261,7 @@ exports.uploadImage = [
         return res.status(400).json({ error: 'Invalid MIME type. Only image/jpeg is allowed.' });
       }
 
-      const userIdFolder = req.user.id.toString();
+      const userIdFolder = "1";
       const dateFolder = new Date().toLocaleDateString('en-CA').replace(/-/g, '');
       const basePath = path.join(__dirname, '../../data/image_uploaded', userIdFolder, dateFolder);
 
@@ -390,67 +294,15 @@ exports.uploadImage = [
   }
 ];
 
-
-// // Function to recursively clean up non-`.jpg` files
-// async function cleanUpFiles(dir) {
-//   const files = await fs.readdir(dir);
-
-//   for (const file of files) {
-//     const filePath = path.join(dir, file);
-//     const stat = await fs.stat(filePath);
-
-//     if (stat.isDirectory()) {
-//       // Recursively clean up subdirectories
-//       await cleanUpFiles(filePath);
-//     } else if (path.extname(file).toLowerCase() !== '.jpg' || mime.lookup(filePath) !== 'image/jpeg') {
-//       // Remove non-`.jpg` files
-//       await fs.remove(filePath);
-//     }
-//   }
-// }
-
-// // Delete current user's uploaded image/ folder
-// exports.deleteImage = async (req, res) => {
-//   try {
-//     const { date, pathToDelete } = req.body; // Body parameters: date and pathToDelete
-//     const userIdFolder = req.user.id + "";
-//     const baseDir = path.join(__dirname, '../../data/image_uploaded', userIdFolder, date);
-
-//     const targetDir = path.resolve(baseDir, pathToDelete); // Resolve the full path
-
-//     // Ensure the resolved path is still within the baseDir
-//     if (!targetDir.startsWith(baseDir)) {
-//       return res.status(400).json({ error: 'Invalid folder path.' });
-//     }
-
-//     // Check if the target exists
-//     if (await fs.pathExists(targetPath)) {
-//       await fs.remove(targetPath); // Remove the file or directory
-
-//       // Check if the date folder is now empty
-//       const remainingFiles = await fs.readdir(baseDir);
-//       if (remainingFiles.length === 0) {
-//         await fs.remove(baseDir); // Remove the date folder if empty
-//       }
-
-//       res.json({ message: 'File or folder deleted successfully' });
-//     } else {
-//       res.status(404).json({ error: 'File or folder not found' });
-//     }
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
 exports.runDetection = async (req, res) => {
-  const userIdFolder = req.user.id + "";
+  const userIdFolder = "1";
   const tempPath = path.join(__dirname, '../../temp/image_detection_pending', userIdFolder);
   try {
     const AI_SERVER_PORT = process.env.AI_SERVER_PORT || 5000;
     const fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
 
     // Terminate all running AI processes
-    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate/${userIdFolder}`);
+    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate`);
     if (!terminateResponse.ok) {
       return res.status(400).json({ error: 'Detection AI server error, please contact support.' });
     }
@@ -465,7 +317,6 @@ exports.runDetection = async (req, res) => {
     for (const imagePath of selectedPaths) {
       const baseDir = path.join(__dirname, '../../data/image_uploaded', userIdFolder);
       const srcPath = path.resolve(baseDir, imagePath); // Resolve the full path
-      // const srcPath = path.join(__dirname, '../../data/image_uploaded', userIdFolder, imagePath);
 
       // Ensure the resolved path is still within the baseDir
       if (!srcPath.startsWith(baseDir)) {
@@ -488,18 +339,8 @@ exports.runDetection = async (req, res) => {
 
     }
 
-    // TODO: Implement detection model integration.
-    // Make a GET request to the Flask server for streaming output
-    // const AI_SERVER_PORT = process.env.AI_SERVER_PORT || 5000;
-    // const response = await axios({
-    //   url: `http://127.0.0.1:${AI_SERVER_PORT}/ai_api/detection/${userIdFolder}`,
-    //   method: 'GET',
-    //   responseType: 'stream'
-    // });
-    
     // Dynamically import node-fetch
-    // const fetch = (await import('node-fetch')).default;
-    const response = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/detection/${userIdFolder}`);
+    const response = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/detection`);
 
     // Check if the response is okay (status code 200)
     if (!response.ok) {
@@ -538,17 +379,15 @@ exports.runDetection = async (req, res) => {
 exports.browseDetectImage = async (req, res) => {
   try {
     const { date, folderPath = '', label: filterLabel, confLow = 0, confHigh = 1 } = req.query; // Query parameters: date, path, label, confidence low/ high
-    const userIdFolder = req.user.id + "";
+    const userIdFolder = "1";
     let baseDir, targetDir;
-    
+
     if (!date) {
-      // const userIdFolder = req.user.id + "";
       baseDir = path.join(__dirname, '../../data/image_marked', userIdFolder);
       targetDir = path.resolve(baseDir); // Resolve the full path
       fs.ensureDirSync(targetDir);
     }
     else {
-      // const userIdFolder = req.user.id + "";
       baseDir = path.join(__dirname, '../../data/image_marked', userIdFolder, date);
       targetDir = path.resolve(baseDir, folderPath); // Resolve the full path
       fs.ensureDirSync(targetDir);
@@ -602,29 +441,19 @@ exports.browseDetectImage = async (req, res) => {
         const jsonData = await extractLabelAndConfidence(jsonFilePath);
         if (!jsonData) return null; // Skip if the JSON cannot be read
         const { label, confidence } = jsonData;
-        
-        // // Step 4: Filter based on the query parameters (label and confidence)
-        // if (
-        //   (!filterLabel || label === filterLabel) &&
-        //   confidence >= parseFloat(confLow) &&
-        //   confidence <= parseFloat(confHigh)
-        // ) {
-        //   return { name: file, isDirectory: false, path: path.join(folderPath, file) };
-        // }
 
         // Step 4: Filtering logic based on the query parameters
         const isLabelNoDetection = filterLabel === "No Detection"; // Check if filterLabel is the string "NoDetection"
         const isLabelMatch = isLabelNoDetection ? label === null : (!filterLabel || label === filterLabel);
-        
+
         // Apply confidence filtering only if filterLabel is not "null"
         const isConfidenceMatch = !isLabelNoDetection && confidence >= parseFloat(confLow) && confidence <= parseFloat(confHigh);
 
         if (isLabelMatch && (isLabelNoDetection || isConfidenceMatch)) {
           return { name: file, isDirectory: false, path: path.join(folderPath, file) };
         }
-        
+
         return null; // Skip if the file doesn't match the filter
-        
       })
     );
 
@@ -640,30 +469,29 @@ exports.browseDetectImage = async (req, res) => {
 
 async function extractLabelAndConfidence(filePath) {
   try {
-      // Use fs-extra to read and parse JSON directly
-      // const jsonPath = path.join(__dirname, filePath)
-      const jsonData = await fs.readJson(filePath);
-      
-      // Extract the label and confidence from the first box
-      const label = jsonData.boxes[0].label;
-      const confidence = jsonData.boxes[0].confidence;
-      
-      return { label, confidence };
+    // Use fs-extra to read and parse JSON directly
+    const jsonData = await fs.readJson(filePath);
+
+    // Extract the label and confidence from the first box
+    const label = jsonData.boxes[0].label;
+    const confidence = jsonData.boxes[0].confidence;
+
+    return { label, confidence };
   } catch (error) {
-      console.error('Error reading or parsing the file:', error);
-      return null; // If JSON cannot be read or parsed, return null to skip this file
+    console.error('Error reading or parsing the file:', error);
+    return null; // If JSON cannot be read or parsed, return null to skip this file
   }
 }
 
 exports.getDetectImagePaths = async (req, res) => {
   try {
     const { path: dirPath = "", label: filterLabel, confLow = 0, confHigh = 1 } = req.query;
-    const userIdFolder = req.user.id + "";
+    const userIdFolder = "1";
     const baseDir = path.join(__dirname, '../../data/image_marked', userIdFolder);
     const targetDir = path.resolve(baseDir, dirPath); // Resolve the full path
-    
+
     fs.ensureDirSync(targetDir);
-  
+
     // Ensure the resolved path is still within the baseDir
     if (!targetDir.startsWith(baseDir)) {
       return res.status(403).json({ error: 'Invalid folder path.' });
@@ -681,7 +509,6 @@ exports.getDetectImagePaths = async (req, res) => {
 
     const filePaths = await getDetectFilePaths(targetDir, baseDir, filterLabel, confLow, confHigh);
 
-        
     res.json({ selectAllPaths: filePaths });
 
   } catch (error) {
@@ -693,7 +520,7 @@ exports.getDetectImagePaths = async (req, res) => {
 exports.downloadDetectImages = async (req, res) => {
   try {
     const { label: filterLabel } = req.query;
-    const userIdFolder = req.user.id + "";
+    const userIdFolder = "1";
     const baseDir = path.join(__dirname, '../../data/image_marked', userIdFolder);
 
     fs.ensureDirSync(baseDir);
@@ -702,7 +529,7 @@ exports.downloadDetectImages = async (req, res) => {
     if (!Array.isArray(filePaths) || filePaths.length === 0) {
       return res.status(400).send('No image matches the filter.');
     }
-    
+
     // Set the response headers for the zip file
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', 'attachment; filename=files.zip');
@@ -728,11 +555,6 @@ exports.downloadDetectImages = async (req, res) => {
 
     // Finalize the archive (i.e., finish the zipping process)
     archive.finalize();
-      // .catch(err => {
-      //   console.error(err);
-      //     res.status(500).send('Error creating zip file.');
-      // });
-
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
@@ -741,7 +563,7 @@ exports.downloadDetectImages = async (req, res) => {
 
 exports.downloadSelectedDetectImages = async (req, res) => {
   try {
-    const userIdFolder = req.user.id + "";
+    const userIdFolder = "1";
     const baseDir = path.join(__dirname, '../../data/image_marked', userIdFolder);
     const { selectedPaths } = req.body;
 
@@ -797,8 +619,8 @@ async function getDetectFilePaths(dir, baseDir, filterLabel, confLow, confHigh) 
     const stat = await fs.stat(filePath);
 
     if (stat && stat.isDirectory()) {
-        const subResults = await getDetectFilePaths(filePath, baseDir, filterLabel, confLow, confHigh);
-        results = results.concat(subResults);
+      const subResults = await getDetectFilePaths(filePath, baseDir, filterLabel, confLow, confHigh);
+      results = results.concat(subResults);
     } else {
       const relativeFilePath = path.relative(
         path.join(__dirname, '../../data/image_marked'),
@@ -821,20 +643,10 @@ async function getDetectFilePaths(dir, baseDir, filterLabel, confLow, confHigh) 
       if (jsonData) {
         const { label, confidence } = jsonData;
 
-        // // Step 4: Filter based on the query parameters (label and confidence)
-        // if (
-        //   (!filterLabel || label === filterLabel) &&
-        //   confidence >= parseFloat(confLow) &&
-        //   confidence <= parseFloat(confHigh)
-        // ) {
-        //   const relativePath = path.relative(baseDir, filePath);
-        //   results.push(relativePath);
-        // }
-
         // Step 4: Filtering logic based on the query parameters
         const isLabelNoDetection = filterLabel === "No Detection"; // Check if filterLabel is the string "NoDetection"
         const isLabelMatch = isLabelNoDetection ? label === null : (!filterLabel || label === filterLabel);
-        
+
         // Apply confidence filtering only if filterLabel is not "null"
         const isConfidenceMatch = !isLabelNoDetection && confidence >= parseFloat(confLow) && confidence <= parseFloat(confHigh);
 
@@ -842,9 +654,7 @@ async function getDetectFilePaths(dir, baseDir, filterLabel, confLow, confHigh) 
           const relativePath = path.relative(baseDir, filePath);
           results.push(relativePath);
         }
-
       }
-      
     }
   }
 
@@ -855,12 +665,12 @@ exports.viewDetectImage = async (req, res) => {
   try {
     const { date, imagePath = '' } = req.query; // Query parameters: date and folder
     let baseDir, targetDir;
-    
+
     if (!date || !imagePath) {
       return res.status(400).json({ error: 'Missing date or imagePath query parameters.' });
     }
     else {
-      const userIdFolder = req.user.id + "";
+      const userIdFolder = "1";
       baseDir = path.join(__dirname, '../../data/image_marked', userIdFolder, date);
       targetDir = path.resolve(baseDir, imagePath); // Resolve the full path
     }
@@ -898,7 +708,7 @@ exports.viewDetectImage = async (req, res) => {
 }
 
 exports.runReid = async (req, res) => {
-  const userIdFolder = req.user.id + "";
+  const userIdFolder = "1";
   const tempImagePath = path.join(__dirname, '../../temp/image_reid_pending', userIdFolder);
   const tempJsonPath = path.join(__dirname, '../../temp/image_cropped_reid_pending', userIdFolder);
   try {
@@ -906,7 +716,7 @@ exports.runReid = async (req, res) => {
     const fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
 
     // Terminate all running AI processes
-    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate/${userIdFolder}`);
+    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate`);
     if (!terminateResponse.ok) {
       return res.status(400).json({ error: '(Terminate) Re-identification AI server error, please contact support.' });
     }
@@ -947,10 +757,10 @@ exports.runReid = async (req, res) => {
 
     // Make a GET request to the Flask server for streaming output
     // const AI_SERVER_PORT = process.env.AI_SERVER_PORT || 5000;
-    
+
     // Dynamically import node-fetch
     // const fetch = (await import('node-fetch')).default;
-    const response = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/reid/${userIdFolder}`);
+    const response = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/reid`);
 
     // Check if the response is okay (status code 200)
     if (!response.ok) {
@@ -988,43 +798,30 @@ exports.runReid = async (req, res) => {
 exports.browseReidImage = async (req, res) => {
   try {
     const { date, time, group_id } = req.query; // Query parameters: date, time, group_id
-    const userIdFolder = req.user.id + "";
+    const userIdFolder = "1";
     const baseDir = path.join(__dirname, '../../data/image_reid_output', userIdFolder);
     let targetDir, browseMode;
-    
+
     if (!date) {
-      // const userIdFolder = req.user.id + "";
-      // baseDir = path.join(__dirname, '../../data/image_marked', userIdFolder);
       browseMode = "root";
       targetDir = path.resolve(baseDir); // Resolve the full path
       fs.ensureDirSync(targetDir);
     }
     else if (!time) {
-      // const userIdFolder = req.user.id + "";
-      // baseDir = path.join(__dirname, '../../data/image_marked', userIdFolder);
       browseMode = "date";
       targetDir = path.resolve(baseDir, date); // Resolve the full path
-      // fs.ensureDirSync(targetDir);
     }
     else if (!group_id) {
-      // const userIdFolder = req.user.id + "";
-      // baseDir = path.join(__dirname, '../../data/image_marked', userIdFolder, date);
       browseMode = "time";
       const timeJson = time + ".json";
       let relDir = path.join(date, timeJson);
       targetDir = path.resolve(baseDir, relDir); // Resolve the full path
-      // fs.ensureDirSync(targetDir)
-      // console.log("relDir: " + relDir);
-      // console.log("targetDir: " + targetDir);
     }
     else {
-      // const userIdFolder = req.user.id + "";
-      // baseDir = path.join(__dirname, '../../data/image_marked', userIdFolder, date, time);
       browseMode = "group_id";
       const timeJson = time + ".json";
       let relDir = path.join(date, timeJson);
       targetDir = path.resolve(baseDir, relDir); // Resolve the full path
-      // fs.ensureDirSync(targetDir);
     }
 
     // Ensure the resolved path is still within the baseDir
@@ -1043,7 +840,7 @@ exports.browseReidImage = async (req, res) => {
       if (stat.isFile()) {
         return res.status(400).json({ error: 'Path is a file, not a directory.' });
       }
-  
+
       const files = await fs.readdir(targetDir);
       const fileDetails = await Promise.all(
         files.map(async (file) => {
@@ -1063,7 +860,7 @@ exports.browseReidImage = async (req, res) => {
           };
         })
       );
-  
+
       return res.status(200).json({ files: fileDetails });
     }
     else if (browseMode === "date") {
@@ -1071,7 +868,7 @@ exports.browseReidImage = async (req, res) => {
       if (stat.isFile()) {
         return res.status(400).json({ error: 'Path is a file, not a directory.' });
       }
-  
+
       const files = await fs.readdir(targetDir);
       const fileDetails = await Promise.all(
         files.map(async (file) => {
@@ -1093,7 +890,7 @@ exports.browseReidImage = async (req, res) => {
           };
         })
       );
-  
+
       return res.status(200).json({ files: fileDetails });
     }
     else if (browseMode === "time") {
@@ -1135,7 +932,7 @@ exports.browseReidImage = async (req, res) => {
     else {
       return res.status(500).json({ error: "browseReidImage: Internal error related to browseMode." });
     }
-    
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
@@ -1145,7 +942,7 @@ exports.browseReidImage = async (req, res) => {
 exports.downloadReidImages = async (req, res) => {
   try {
     const { date, time } = req.query;
-    const userIdFolder = req.user.id + "";
+    const userIdFolder = "1";
     const baseDir = path.join(__dirname, '../../data/image_reid_output', userIdFolder);
     const baseImgDir = path.join(__dirname, '../../data/image_marked', userIdFolder);
     let targetDir;
@@ -1210,40 +1007,40 @@ exports.downloadReidImages = async (req, res) => {
 // Function to read the JSON file and extract keys
 const extractKeysFromJson = async (filePath) => {
   try {
-      // Read the JSON file
-      const data = fs.readFileSync(filePath, 'utf8');
-      const jsonObject = JSON.parse(data);
+    // Read the JSON file
+    const data = fs.readFileSync(filePath, 'utf8');
+    const jsonObject = JSON.parse(data);
 
-      // Extract keys into a list
+    // Extract keys into a list
     return Object.keys(jsonObject);
   } catch (error) {
-      console.error('Error reading or parsing JSON file:', error);
-      return [];
+    console.error('Error reading or parsing JSON file:', error);
+    return [];
   }
 };
 
 // Function to read the JSON file and extract values for a specific key
 const extractValuesForKey = async (filePath, key) => {
   try {
-      // Read the JSON file
-      const data = fs.readFileSync(filePath, 'utf8');
-      const jsonObject = JSON.parse(data);
+    // Read the JSON file
+    const data = fs.readFileSync(filePath, 'utf8');
+    const jsonObject = JSON.parse(data);
 
-      // Extract values for the specified key
-      const values = jsonObject[key];
-      
-      // Check if values exist and return them, or return an empty array
-      return Array.isArray(values) ? values : [];
+    // Extract values for the specified key
+    const values = jsonObject[key];
+
+    // Check if values exist and return them, or return an empty array
+    return Array.isArray(values) ? values : [];
   } catch (error) {
-      console.error('Error reading or parsing JSON file:', error);
-      return [];
+    console.error('Error reading or parsing JSON file:', error);
+    return [];
   }
 };
 
 exports.deleteReidResult = async (req, res) => {
   try {
     const { date, time } = req.query; // Query parameters: date, time
-    const userIdFolder = req.user.id + "";
+    const userIdFolder = "1";
     const baseDir = path.join(__dirname, '../../data/image_reid_output', userIdFolder);
 
     if (!date || !time) {
@@ -1251,7 +1048,6 @@ exports.deleteReidResult = async (req, res) => {
     }
 
     const timeJson = time + ".json";
-    // const dateDir = path.join(baseDir, date);
     const deteleDir = path.join(date, timeJson);
     const targetDir = path.resolve(baseDir, deteleDir);
 
@@ -1274,18 +1070,18 @@ exports.deleteReidResult = async (req, res) => {
       res.status(200).json({ message: `ReID result (date = ${date}, time = ${time}) deleted successfully.` });
     } else {
       res.status(404).json({ error: `ReID result (date = ${date}, time = ${time}) not found.` });
-    } 
+    }
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({error: error.message});
+    res.status(500).json({ error: error.message });
   }
 }
 
 exports.renameReidGroup = async (req, res) => {
   try {
     const { date, time, old_group_id, new_group_id } = req.query;
-    const userIdFolder = req.user.id + "";
+    const userIdFolder = "1";
     const baseDir = path.join(__dirname, '../../data/image_reid_output', userIdFolder);
     let targetDir;
 
@@ -1344,18 +1140,17 @@ exports.renameReidGroup = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({error: error.message});
+    res.status(500).json({ error: error.message });
   }
 }
 
 exports.terminateAI = async (req, res) => {
   try {
-    const userIdFolder = req.user.id + "";
     const AI_SERVER_PORT = process.env.AI_SERVER_PORT || 5000;
     const fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
 
     // Terminate all running AI processes
-    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate/${userIdFolder}`);
+    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate`);
     if (!terminateResponse.ok) {
       return res.status(400).json({ error: '(Terminate) AI server error, please contact support.' });
     }
@@ -1363,52 +1158,6 @@ exports.terminateAI = async (req, res) => {
   }
   catch (error) {
     console.error(error);
-    res.status(500).json({error: error.message});
+    res.status(500).json({ error: error.message });
   }
 }
-
-// exports.viewReidImage = async (req, res) => {
-//   try {
-//     const { date, time, group_id, image_name = '' } = req.query; // Query parameters: date, time, group_id, image_name
-//     let baseDir, targetDir;
-    
-//     if (!date || !time || !group_id || !image_name) {
-//       return res.status(400).json({ error: 'Missing date or imagePath query parameters.' });
-//     }
-//     else {
-//       const userIdFolder = req.user.id + "";
-//       baseDir = path.join(__dirname, '../../data/image_marked', userIdFolder, date);
-//       targetDir = path.resolve(baseDir, imagePath); // Resolve the full path
-//     }
-
-//     // Ensure the resolved path is still within the baseDir
-//     if (!targetDir.startsWith(baseDir)) {
-//       return res.status(403).json({ error: 'Invalid folder path.' });
-//     }
-
-//     // Check if the directory exists before reading it
-//     if (!await fs.pathExists(targetDir)) {
-//       return res.status(404).json({ error: 'Directory not found.' });
-//     }
-
-//     const stat = fs.statSync(targetDir);
-//     if (stat.isDirectory()) {
-//       return res.status(400).json({ error: 'Path is a directory, not an image file.' });
-//     }
-
-//     const mime = require('mime-types');
-//     const mimeType = mime.lookup(targetDir);
-//     if (!mimeType || !mimeType.startsWith('image/')) {
-//       return res.status(400).json({ error: 'The requested file is not an image.' });
-//     }
-
-//     // Ensure the file exists before sending it
-//     if (!fs.existsSync(targetDir)) {
-//       return res.status(404).json({ error: 'Image not found.' });
-//     }
-
-//     res.sendFile(targetDir);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// }

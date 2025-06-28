@@ -80,15 +80,6 @@ export default function Users() {
             }}
           />
         ))}
-        {/* <div className="add-user-wrapper">
-          <button
-            className="add-user-button"
-            aria-label="Add user"
-            onClick={() => {
-              setModalStatus(modalStatuses.creatingUser);
-            }}
-          />
-        </div> */}
       </div>
       {modalStatus !== modalStatuses.hidden &&
         createPortal(

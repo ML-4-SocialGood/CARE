@@ -5,7 +5,6 @@ const sequelize = require('../configs/dbConfig');
 
 const User = require('./user');
 const Image = require('./image');
-const { isAdmin } = require('../middlewares/authMiddleware');
 
 
 // Sync all models with the database

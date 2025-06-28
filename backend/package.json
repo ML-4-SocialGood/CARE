@@ -1,7 +1,7 @@
 {
   "name": "capstone-project-team-39-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon ./src/server.js",
@@ -29,6 +29,7 @@
     "path": "^0.12.7",
     "sequelize": "^6.37.3",
     "sqlite3": "^5.1.7",
+    "unimported": "^1.31.0",
     "unzipper": "^0.12.3"
   },
   "devDependencies": {

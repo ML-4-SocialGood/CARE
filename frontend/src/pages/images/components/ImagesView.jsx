@@ -346,6 +346,7 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
             setInputPage={setInputPage}
             setPreview={setPreview}
             selectInputs={selectInputs}
+            label={label}
           />
         ) : (
           <div className="uploads-file-list-warning">
@@ -451,7 +452,8 @@ function PaginateItems({
   setInputPage,
   setPreview,
   handleDownload,
-  selectInputs,
+  selectInputs, 
+  label
 }) {
   const [allSelected, setAllSelected] = useState(null);
 
@@ -531,7 +533,7 @@ function PaginateItems({
       <Button
         className="analyse-button button-primary"
         onClick={handleAnalyse}
-        disabled={selected.size === 0} // Disable if nothing selected
+        disabled={selected.size === 0 || label === null} // Disable if nothing selected
         >
         Run ReID
         {selected.size > 0 && (
@@ -607,7 +609,7 @@ function PaginateItems({
       <Button 
         className="analyse-button button-primary" 
         onClick={handleAnalyse}
-        disabled={selected.size === 0} // Disable if nothing selected
+        disabled={selected.size === 0 || !label} // Disable if nothing selected
       >
         Run ReID
         {selected.size > 0 && (

@@ -27,7 +27,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <AuthProvider>
             <App />
           </AuthProvider>
-    
         </PersistGate>
       </Provider>
     </Auth0Provider>

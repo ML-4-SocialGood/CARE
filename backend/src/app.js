@@ -18,4 +18,23 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Function to list all routes
+function listRoutes(app) {
+    console.log('Registered Routes:');
+    app._router.stack.forEach(function (middleware) {
+        if (middleware.route) { // Routes registered directly on the app
+            console.log(`${Object.keys(middleware.route.methods).join(', ').toUpperCase()} ${middleware.route.path}`);
+        } else if (middleware.name === 'router') { // Routes defined using express.Router()
+            middleware.handle.stack.forEach(function (handler) {
+                if (handler.route) {
+                    console.log(`${Object.keys(handler.route.methods).join(', ').toUpperCase()} ${handler.route.path}`);
+                }
+            });
+        }
+    });
+}
+
+// Call the function to list routes
+listRoutes(app);
+
 module.exports = app;

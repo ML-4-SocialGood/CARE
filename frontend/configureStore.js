@@ -12,7 +12,6 @@ import {
   REGISTER,
 } from "redux-persist";
 import storageSession from "redux-persist/lib/storage/session";
-import uploadReducer from "./features/upload/uploadSlice";
 import bannerReducer from "./features/banner/bannerSlice";
 
 const persistConfig = {
@@ -24,7 +23,6 @@ const persistConfig = {
 const persistedReducer = persistReducer(
   persistConfig,
   combineReducers({
-    uploads: uploadReducer,
     banner: bannerReducer,
   })
 );

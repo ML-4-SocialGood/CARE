@@ -7,7 +7,6 @@ import { Footer } from "./Footer";
 import Banner from "./Banner";
 import { useDispatch, useSelector } from "react-redux";
 import { remove_message } from "../../features/banner/bannerSlice";
-import { fetchStatuses } from "../../features/upload/uploadSlice";
 
 export default function SitePage({ component, withHeader, wrapperClass }) {
   const dispatch = useDispatch();

@@ -1,14 +1,11 @@
 /** @format */
 
 import React from "react";
-// import JSZip from "jszip";
 import clsx from "clsx";
 import upload from "../../../assets/upload.png";
 import { acceptedFileTypes } from "../constants/acceptedFileTypes";
-
 import { Heading } from "../../../components/Heading";
 import { Button } from "../../../components/Button";
-
 import { createPortal } from "react-dom";
 import Modal from "../../../components/Modal";
 import { Link, useNavigate } from "react-router-dom";
@@ -18,8 +15,7 @@ import {
   add_message,
   bannerStatuses,
 } from "../../../../features/banner/bannerSlice";
-import apiClient from '../../../utils/apiClient';
-
+import apiClient from "../../../utils/apiClient";
 
 const statuses = {
   initial: "Initial",
@@ -115,21 +111,13 @@ export default function ImageUploader() {
   const [files, setFiles] = React.useState([]);
   const [status, setStatus] = React.useState(statuses.initial);
   const [dragging, setDragging] = React.useState(false);
-  // const { getAccessTokenSilently, user } = useAuth0();
   const [showModal, setShowModal] = React.useState(false);
-
   const dispatch = useDispatch();
-
   const inputRef = React.useRef(null);
-  // const imagesUploadStatus = useSelector((state) => state.images.status);
-  // const imagesErrorMessage = useSelector((state) => state.images.error);
-
   const [loading] = React.useState(false);
   const [loadedFileCount, setLoadedFileCount] = React.useState(0);
-
   const [currentFolder, setCurrentFolder] = React.useState("");
   const [folders, setFolders] = React.useState([]);
-
   const navigate = useNavigate();
 
   const handleDragOver = (e) => {
@@ -176,14 +164,19 @@ export default function ImageUploader() {
     console.log("Folders:", folders); // 调试：打印所有文件夹
     for await (const entry of folderEntry.values()) {
       if (entry.kind === "directory") {
-        await handleDirectoryEntry(files, entry, folders, `${folder}/${entry.name}`);
+        await handleDirectoryEntry(
+          files,
+          entry,
+          folders,
+          `${folder}/${entry.name}`
+        );
       } else {
         await handleFileEntry(files, entry, folder);
       }
     }
   };
 
-  const handleFileEntry = async (files, fileEntry, folder = '') => {
+  const handleFileEntry = async (files, fileEntry, folder = "") => {
     const file = await fileEntry.getFile();
     const validImage = verifyImage(file);
 
@@ -209,7 +202,7 @@ export default function ImageUploader() {
 
       const filePath = fileToAdd.webkitRelativePath; // 返回的是 a/b.txt
       const folder = filePath.substring(0, filePath.lastIndexOf("/")); // 这里我们需要获取该文件的真实路径，也就是 a， 所以我们需要去掉 /b.txt
-      const topFolder = folder.split('/')[0]; // 获取顶级文件夹，如 'Stoat_Capital_Kiwi'
+      const topFolder = folder.split("/")[0]; // 获取顶级文件夹，如 'Stoat_Capital_Kiwi'
 
       if (!foldersToAdd.includes(topFolder)) {
         foldersToAdd.push(topFolder); // 仅添加不重复的顶级文件夹
@@ -240,14 +233,14 @@ export default function ImageUploader() {
       setStatus(statuses.uploading);
       setShowModal(true);
       setLoadedFileCount(0);
-  
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
 
         // Check file extension is .jpg
-        const isJpgExtension = file.name.toLowerCase().endsWith('.jpg');
+        const isJpgExtension = file.name.toLowerCase().endsWith(".jpg");
         // Check MIME type is image/jpeg
-        const isJpegMime = file.type === 'image/jpeg';
+        const isJpegMime = file.type === "image/jpeg";
 
         if (isJpgExtension && isJpegMime) {
           // Create FormData for each file
@@ -263,7 +256,6 @@ export default function ImageUploader() {
 
           setLoadedFileCount(i + 1);
         }
-        
       }
 
       setTimeout(() => {
@@ -280,7 +272,6 @@ export default function ImageUploader() {
       );
     }
   };
-
 
   return (
     <>
@@ -376,23 +367,24 @@ export default function ImageUploader() {
               Upload
             </Button>
           ) : null}
-          {showModal && createPortal(
-          <>
-            {/* Mask that blocks interaction outside the modal */}
-            <div className="modal-mask"></div>
+          {showModal &&
+            createPortal(
+              <>
+                {/* Mask that blocks interaction outside the modal */}
+                <div className="modal-mask"></div>
 
-            <Modal
-              className="uploader-modal"
-              onCloseClick={() => {
-                setShowModal(false);
-                window.location.reload();
-              }}
-            >
-              {generateModalContent(status, loadedFileCount, files.length)}
-            </Modal>
-          </>,
-          document.body
-        )}
+                <Modal
+                  className="uploader-modal"
+                  onCloseClick={() => {
+                    setShowModal(false);
+                    window.location.reload();
+                  }}
+                >
+                  {generateModalContent(status, loadedFileCount, files.length)}
+                </Modal>
+              </>,
+              document.body
+            )}
         </>
       )}
     </>
@@ -406,14 +398,16 @@ const createFileList = (
   setCurrentFolder,
   folders
 ) => {
-
   const currentFolders = folders.filter((item) => {
-    if (currentFolder === '') {
+    if (currentFolder === "") {
       // 根目录下，只显示不包含 `/` 的文件夹（即一级目录）
-      return item.split('/').length === 1;
+      return item.split("/").length === 1;
     } else {
       // 子目录中，显示以当前文件夹开头的直接子目录
-      return item.startsWith(`${currentFolder}/`) && item.split('/').length === currentFolder.split('/').length + 1;
+      return (
+        item.startsWith(`${currentFolder}/`) &&
+        item.split("/").length === currentFolder.split("/").length + 1
+      );
     }
   });
 
@@ -424,7 +418,10 @@ const createFileList = (
   // 获取当前路径内的文件列表
   const currentFiles = files.filter(
     (item) =>
-      item._webkitRelativePath.substring(0, item._webkitRelativePath.lastIndexOf("/")) === currentFolder
+      item._webkitRelativePath.substring(
+        0,
+        item._webkitRelativePath.lastIndexOf("/")
+      ) === currentFolder
   );
 
   if (files.length) {
@@ -464,14 +461,14 @@ const createFileList = (
             {/* 文件夹列表（从文件列表复制） */}
             {currentFolders.map((folder, index) => (
               <li className="uploads__list__item" key={`${folder}-${index}}`}>
-
                 {/* 这里我们要添加一个点击事件，当点击文件夹名字后，跳转到子目录（因为可点击，所以我们需要修改下默认样式） */}
                 <div className="uploads__list__item__folderinfo">
-                  {console.log("Folder Name:", folder)} {/* 调试：检查渲染的文件夹名称 */}
-                  {currentFolder === '' ? folder : folder.substring(currentFolder.length + 1)}
-                  
+                  {console.log("Folder Name:", folder)}{" "}
+                  {/* 调试：检查渲染的文件夹名称 */}
+                  {currentFolder === ""
+                    ? folder
+                    : folder.substring(currentFolder.length + 1)}
                 </div>
-                
               </li>
             ))}
             {/* 文件列表：原来显示所有文件，现在要改成当前目录的文件列表 */}

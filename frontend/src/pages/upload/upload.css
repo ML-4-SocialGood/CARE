@@ -266,6 +266,10 @@
   color: var(--colour-secondary);
 }
 
+.progress-wrapper {
+  position: relative;
+}
+
 .progress-container {
   display: flex;
   column-gap: 16px;

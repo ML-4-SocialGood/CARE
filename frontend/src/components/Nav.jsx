@@ -1,21 +1,15 @@
 /** @format */
-import { useState, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import { SignOutButton, Button, SignInButton } from "./Button";
 import clsx from "clsx";
 import "./Nav.css";
-import userAvatar from "../assets/user.png";
 
 import { Link, useLocation } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
-import { AuthContext } from "../hook/auth";
 
 export default function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navRef = useRef();
   const location = useLocation();
-  //const { isAuthenticated, isLoading } = useAuth0();
-  const { isAuthenticated } = useContext(AuthContext);
 
   const handleClick = () => {
     setMenuOpen(!menuOpen);
@@ -27,79 +21,50 @@ export default function NavBar() {
     }
   }, [menuOpen]);
 
-  const createLinks = () =>
+  const createLinks = () => (
     // TODO: update these links
-    isAuthenticated ? (
-      <>
-        <NavLink
-          className={
-            location.pathname === "/upload" ? "nav__link__anchor-active" : null
-          }
-          href="/upload"
-        >
-          Image Uploader
-        </NavLink>
+    <>
+      <NavLink
+        className={
+          location.pathname === "/upload" ? "nav__link__anchor-active" : null
+        }
+        href="/upload"
+      >
+        Image Uploader
+      </NavLink>
 
-        <NavLink
-          className={
-            location.pathname === "/uploads" ? "nav__link__anchor-active" : null
-          }
-          href="/uploads"
-        >
-          Image Gallery
-        </NavLink>
+      <NavLink
+        className={
+          location.pathname === "/uploads" ? "nav__link__anchor-active" : null
+        }
+        href="/uploads"
+      >
+        Image Gallery
+      </NavLink>
 
-        <NavLink
-          className={
-            location.pathname === "/images" ? "nav__link__anchor-active" : null
-          }
-          href="/images"
-        >
-          Detection Gallery
-        </NavLink>
+      <NavLink
+        className={
+          location.pathname === "/images" ? "nav__link__anchor-active" : null
+        }
+        href="/images"
+      >
+        Detection Gallery
+      </NavLink>
 
-        <NavLink
-          className={
-            location.pathname === "/reid" ? "nav__link__anchor-active" : null
-          }
-          href="/reid"
-        >
-          ReID Gallery
-        </NavLink>
+      <NavLink
+        className={
+          location.pathname === "/reid" ? "nav__link__anchor-active" : null
+        }
+        href="/reid"
+      >
+        ReID Gallery
+      </NavLink>
 
-        <div className="vl"></div>
+      <div className="vl"></div>
 
-        <DropdownMenu></DropdownMenu>
-
-        <Button
-          ariaLabel="Profile"
-          data-cy="profile"
-          className="nav__link-profile"
-          variant="primary"
-          isLink
-          href="/profile"
-        >
-          <img
-            src={userAvatar}
-            alt="User"
-            className="nav__link-profile__icon"
-          />
-        </Button>
-      </>
-    ) : (
-      <>
-        <DropdownMenu></DropdownMenu>
-
-        <SignInButton
-          ariaLabel="Sign in"
-          className="nav__link-button"
-          variant="primary"
-          data-cy="sign-in"
-        >
-          Sign in
-        </SignInButton>
-      </>
-    );
+      <DropdownMenu></DropdownMenu>
+    </>
+  );
 
   return (
     <>
@@ -109,12 +74,7 @@ export default function NavBar() {
         data-menu-open={menuOpen}
         ref={navRef}
       >
-        <ul
-          className={clsx(
-            "nav__links",
-            isAuthenticated && "nav__links--signed-in"
-          )}
-        >
+        <ul className={clsx("nav__links", "nav__links--signed-in")}>
           {createLinks()}
         </ul>
       </nav>
@@ -124,74 +84,41 @@ export default function NavBar() {
 
 const DropdownMenu = () => {
   const location = useLocation();
-  const { isAuthenticated } = useContext(AuthContext);
-
-  const createLinks = () =>
-    isAuthenticated ? (
-      <>
-        <div className="dropdown">
-          <button className="dropdown-button">Navigation</button>
-          <div className="dropdown-menu">
-            <NavLink
-              className={
-                location.pathname === "/" ? "nav__link__anchor-active" : null
-              }
-              href="/"
-            >
-              Home
-            </NavLink>
-            <NavLink
-              className={
-                location.pathname === "/about"
-                  ? "nav__link__anchor-active"
-                  : null
-              }
-              href="/about"
-            >
-              About
-            </NavLink>
-            <NavLink
-              className={
-                location.pathname === "/user-guide"
-                  ? "nav__link__anchor-active"
-                  : null
-              }
-              href="/user-guide"
-            >
-              User Guide
-            </NavLink>
-          </div>
+  return (
+    <>
+      <div className="dropdown">
+        <button className="dropdown-button">Navigation</button>
+        <div className="dropdown-menu">
+          <NavLink
+            className={
+              location.pathname === "/" ? "nav__link__anchor-active" : null
+            }
+            href="/"
+          >
+            Home
+          </NavLink>
+          <NavLink
+            className={
+              location.pathname === "/about" ? "nav__link__anchor-active" : null
+            }
+            href="/about"
+          >
+            About
+          </NavLink>
+          <NavLink
+            className={
+              location.pathname === "/user-guide"
+                ? "nav__link__anchor-active"
+                : null
+            }
+            href="/user-guide"
+          >
+            User Guide
+          </NavLink>
         </div>
-      </>
-    ) : (
-      <>
-        <div className="dropdown">
-          <button className="dropdown-button">Navigation</button>
-          <div className="dropdown-menu">
-            <NavLink
-              className={
-                location.pathname === "/" ? "nav__link__anchor-active" : null
-              }
-              href="/"
-            >
-              Home
-            </NavLink>
-            <NavLink
-              className={
-                location.pathname === "/about"
-                  ? "nav__link__anchor-active"
-                  : null
-              }
-              href="/about"
-            >
-              About
-            </NavLink>
-          </div>
-        </div>
-      </>
-    );
-
-  return <>{createLinks()}</>;
+      </div>
+    </>
+  );
 };
 
 const NavLink = ({ isAnchor, href, children, className }) => {

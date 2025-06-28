@@ -1,15 +1,11 @@
 /** @format */
 
-import React, { useContext } from "react";
 import HeroVideo from "../../../assets/stoat-4.mp4";
 import HeroFallbackImage from "../../../assets/hero_fallback.jpg";
 import { Heading } from "../../../components/Heading";
-import { Button, SignInButton } from "../../../components/Button";
-import { AuthContext } from "../../../hook/auth";
+import { Button } from "../../../components/Button";
 
 export default function Hero() {
-  const { isAuthenticated } = useContext(AuthContext);
-
   return (
     <section className="hero">
       <div className="hero__overlay" />
@@ -21,29 +17,18 @@ export default function Hero() {
         <div className="hero__content__text">
           <Heading level={1}>CARE Toolkit</Heading>
           <Heading level={3} className={`hero__content__subheading`}>
-          Towards AI-driven conservation
+            Towards AI-driven conservation
           </Heading>
-          {isAuthenticated ? (
-            <Button
-              ariaLabel="Get started"
-              className="hero__content__button"
-              data-cy="hero-sign-in"
-              isLink
-              href={"/profile"}
-              variant="secondary"
-            >
-              Get started
-            </Button>
-          ) : (
-            <SignInButton
-              ariaLabel="Get started"
-              className="hero__content__button"
-              data-cy="hero-sign-in"
-              variant="secondary"
-            >
-              Get started
-            </SignInButton>
-          )}
+          <Button
+            ariaLabel="Get started"
+            className="hero__content__button"
+            data-cy="hero-sign-in"
+            isLink
+            href={"/upload"}
+            variant="secondary"
+          >
+            Get started
+          </Button>
         </div>
       </div>
     </section>

@@ -1,8 +1,6 @@
 /** @format */
 import PropTypes from "prop-types";
 import { SiteHeader } from "./SiteHeader";
-import { useAuth0 } from "@auth0/auth0-react";
-import Loader from "./Loader";
 import { Footer } from "./Footer";
 import Banner from "./Banner";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,11 +8,7 @@ import { remove_message } from "../../features/banner/bannerSlice";
 
 export default function SitePage({ component, withHeader, wrapperClass }) {
   const dispatch = useDispatch();
-  // TODO: Globally check for loading here
-  const { isLoading } = useAuth0();
-
   const bannerMessages = useSelector((state) => state.banner.messages);
-
   return (
     <div className={wrapperClass}>
       {bannerMessages?.length
@@ -36,7 +30,7 @@ export default function SitePage({ component, withHeader, wrapperClass }) {
         : null}
 
       {withHeader && <SiteHeader />}
-      {isLoading ? <Loader /> : component}
+      {component}
       <Footer />
     </div>
   );

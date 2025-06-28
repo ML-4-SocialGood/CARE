@@ -7,9 +7,6 @@ const apiClient = async (endpoint, options = {}) => {
   // Default options for the fetch request
   const defaultOptions = {
     credentials: 'include', // Ensures cookies are sent with requests
-    // headers: {
-    //   'Content-Type': 'application/json',
-    // },
     ...options, // Allow options to be overridden
   };
 

@@ -181,6 +181,7 @@ def process_images_with_pool(yolo_model_path, original_images_dir, output_dir, j
         log_message(log_file, f"No images found in the folder '{original_images_dir}'.")
         return
 
+    mp.freeze_support()
     manager = mp.Manager()
     counter = manager.Value('i', 0)
     lock = manager.Lock()
@@ -196,6 +197,16 @@ def process_images_with_pool(yolo_model_path, original_images_dir, output_dir, j
     print("STATUS: DONE", flush=True)
 
 
+def run(original_images_dir, output_images_dir, json_output_dir):
+    log_file = create_log_file()
+
+    yolo_model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Detector.pt")
+    start_time = time.time()
+    process_images_with_pool(yolo_model_path, original_images_dir, output_images_dir, json_output_dir, log_file)
+
+    end_time = time.time()
+    total_time = end_time - start_time
+    log_message(log_file, f"Total processing time: {total_time:.2f} seconds")
 
 
 def main():
@@ -206,16 +217,7 @@ def main():
     original_images_dir = sys.argv[1]
     output_images_dir = sys.argv[2]
     json_output_dir = sys.argv[3]
-    
-    log_file = create_log_file()
-
-    start_time = time.time()
-    yolo_model_path = "Detector.pt"
-    process_images_with_pool(yolo_model_path, original_images_dir, output_images_dir, json_output_dir, log_file)
-
-    end_time = time.time()
-    total_time = end_time - start_time
-    log_message(log_file, f"Total processing time: {total_time:.2f} seconds")
+    run(original_images_dir, output_images_dir, json_output_dir)
 
 if __name__ == "__main__":
     main()

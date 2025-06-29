@@ -3,12 +3,9 @@ const { User, Image } = require('../models');
 const multer = require('multer');
 const fs = require('fs-extra');
 const path = require('path');
-// const unzipper = require('unzipper');
-const mime = require('mime-types');
-// const axios = require('axios');
-// const fetch = require('node-fetch');
-const bcrypt = require('bcryptjs');
+const { spawn } = require('node:child_process');
 const archiver = require('archiver');
+const os = require('os');
 
 // Multer setup for image upload
 const upload = multer({ dest: 'temp' });
@@ -294,18 +291,48 @@ exports.uploadImage = [
   }
 ];
 
+var subProcess = null;
+
+function terminateSubprocess() {
+  // Terminate any running AI process.
+  if (subProcess === null) {
+    return;
+  }
+  subProcess.kill();
+  subProcess = null;
+}
+
+function spawnPythonSubprocess(args) {
+  let ps = null;
+  if (process.env.PYINSTALLER_EXE !== undefined) {
+    console.log(`Spawning pyinstaller subprocess: ${process.env.PYINSTALLER_EXE} args: ${args.join(' ')}`)
+    try {
+      ps = spawn(process.env.PYINSTALLER_EXE, args);
+    } catch (e) {
+      console.log(e)
+      throw e;
+    }
+  } else {
+    const scriptPath = path.join(__dirname, "../../ai_server/main.py");
+    const condaEnv = process.env.DEVICE == "GPU" ? "CARE-GPU" : "CARE";
+    const python = os.platform() == "win32" ? "python" : "python3";
+    args = ['run', '--no-capture-output', '-n', condaEnv, python, scriptPath].concat(args);
+    console.log(`Spawning conda subprocess. 'conda ${args.join(' ')}'`)
+    try {
+      ps = spawn('conda', args);
+    } catch (e) {
+      console.log(e)
+      throw e;
+    }
+  }
+  return ps;
+}
+
 exports.runDetection = async (req, res) => {
   const userIdFolder = "1";
   const tempPath = path.join(__dirname, '../../temp/image_detection_pending', userIdFolder);
   try {
-    const AI_SERVER_PORT = process.env.AI_SERVER_PORT || 5000;
-    const fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
-
-    // Terminate all running AI processes
-    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate`);
-    if (!terminateResponse.ok) {
-      return res.status(400).json({ error: 'Detection AI server error, please contact support.' });
-    }
+    terminateSubprocess();
     await fs.remove(tempPath);
 
     const { selectedPaths } = req.body;
@@ -339,37 +366,36 @@ exports.runDetection = async (req, res) => {
 
     }
 
-    // Dynamically import node-fetch
-    const response = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/detection`);
-
-    // Check if the response is okay (status code 200)
-    if (!response.ok) {
-      await fs.remove(tempPath);
-      return res.status(400).json({ error: 'Detection AI server error, please contact support.' });
-    }
+    const device = process.env.DEVICE === "GPU" ? "gpu" : "cpu";
+    let args = [
+      "detection-" + device,
+      path.join(__dirname, '../../temp/image_detection_pending', userIdFolder),
+      path.join(__dirname, '../../temp/image_marked', userIdFolder),
+      path.join(__dirname, '../../temp/image_cropped_json', userIdFolder),
+    ]
+    let ps = spawnPythonSubprocess(args);
+    // Note: We track the process on a global, but only reference it in a local var, as another
+    // event handler could clear the global var.
+    subProcess = ps;
 
     // Set up the correct content type for the client to receive streaming data
     res.setHeader('Content-Type', 'text/html');
 
-    // Forward data from Flask server to the client
-    response.body.on('data', (chunk) => {
-      res.write(chunk);
+    ps.stdout.on('data', (data) => {
+      console.log(`stdout: ${data}`);
+      res.write(data);
     });
 
-    // End the response when the Flask server finishes streaming
-    response.body.on('end', async () => {
-      await fs.remove(tempPath);
+    ps.on('close', (code) => {
+      console.log(`child process exited with code ${code}`);
+      fs.remove(tempPath);
+      if (code != 0) {
+        return res.status(500).end('ERROR: Detection AI model error, please contact support.');
+      }
       res.end();
+      subProcess = null;
     });
 
-    // Handle any errors that occur during streaming
-    response.body.on('error', async (err) => {
-      console.error('Streaming error:', err);
-      await fs.remove(tempPath);
-      return res.status(500).end('ERROR: Detection AI model error, please contact support.');
-    });
-
-    // res.status(201).json({ message: 'TEST: All valid images copied.' });
   } catch (error) {
     await fs.remove(tempPath);
     res.status(500).json({ error: error.message });
@@ -712,14 +738,7 @@ exports.runReid = async (req, res) => {
   const tempImagePath = path.join(__dirname, '../../temp/image_reid_pending', userIdFolder);
   const tempJsonPath = path.join(__dirname, '../../temp/image_cropped_reid_pending', userIdFolder);
   try {
-    const AI_SERVER_PORT = process.env.AI_SERVER_PORT || 5000;
-    const fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
-
-    // Terminate all running AI processes
-    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate`);
-    if (!terminateResponse.ok) {
-      return res.status(400).json({ error: '(Terminate) Re-identification AI server error, please contact support.' });
-    }
+    terminateSubprocess();
     await fs.remove(tempImagePath);
     await fs.remove(tempJsonPath);
 
@@ -752,41 +771,45 @@ exports.runReid = async (req, res) => {
       } else {
         console.warn(`runReid: File not found: ${imagePath}`);
       }
-
     }
 
-    // Make a GET request to the Flask server for streaming output
-    // const AI_SERVER_PORT = process.env.AI_SERVER_PORT || 5000;
-
-    // Dynamically import node-fetch
-    // const fetch = (await import('node-fetch')).default;
-    const response = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/reid`);
-
-    // Check if the response is okay (status code 200)
-    if (!response.ok) {
-      await fs.remove(tempImagePath);
-      return res.status(400).json({ error: 'Re-identification AI server error, please contact support.' });
-    }
+    const device = process.env.DEVICE === "GPU" ? "gpu" : "cpu";
+    let args = [
+      "reid-" + device,
+      path.join(__dirname, '../../temp/image_reid_pending', userIdFolder),
+      path.join(__dirname, '../../temp/image_cropped_json', userIdFolder),
+      path.join(__dirname, '../../temp/image_cropped_reid_pending', userIdFolder),
+      path.join(__dirname, '../../temp/image_reid_output', userIdFolder),
+    ]
+    let ps = spawnPythonSubprocess(args);
+    // Note: We track the process on a global, but only reference it in a local var, as another
+    // event handler could clear the global var.
+    subProcess = ps;
 
     // Set up the correct content type for the client to receive streaming data
     res.setHeader('Content-Type', 'text/html');
 
-    // Forward data from Flask server to the client
-    response.body.on('data', (chunk) => {
-      res.write(chunk);
+    ps.stdout.on('data', (data) => {
+      console.log(`stdout: ${data}`);
+      res.write(data);
     });
 
-    // End the response when the Flask server finishes streaming
-    response.body.on('end', async () => {
-      await fs.remove(tempImagePath);
+    ps.stderr.on('data', (data) => {
+      console.log(`stderr: ${data}`);
+    });
+
+    ps.on('error', (err) => {
+      console.error('Failed to start subprocess. err=' + err);
+    });
+
+    ps.on('close', (code) => {
+      console.log(`child process exited with code ${code}`);
+      fs.remove(tempImagePath);
+      if (code != 0) {
+        return res.status(500).end('ERROR: Detection AI model error, please contact support.');
+      }
       res.end();
-    });
-
-    // Handle any errors that occur during streaming
-    response.body.on('error', async (err) => {
-      console.error('Streaming error:', err);
-      await fs.remove(tempImagePath);
-      return res.status(500).end('ERROR: Re-identification AI model error, please contact support.');
+      subProcess = null;
     });
 
   } catch (error) {
@@ -1145,19 +1168,5 @@ exports.renameReidGroup = async (req, res) => {
 }
 
 exports.terminateAI = async (req, res) => {
-  try {
-    const AI_SERVER_PORT = process.env.AI_SERVER_PORT || 5000;
-    const fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
-
-    // Terminate all running AI processes
-    const terminateResponse = await fetch(`http://127.0.0.1:${AI_SERVER_PORT}/ai_api/terminate`);
-    if (!terminateResponse.ok) {
-      return res.status(400).json({ error: '(Terminate) AI server error, please contact support.' });
-    }
-    res.status(200).json({ message: `AI tasks terminated.` })
-  }
-  catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
+  terminateSubprocess();
 }

@@ -1,81 +1,64 @@
 /** @format */
 
-import "./viewuploads.css";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { Heading } from "../../components/Heading";
-import { add_message, bannerStatuses } from "../../utils/bannerSlice";
-import apiClient from "../../utils/apiClient";
-import UploadsView from "./components/UploadsView";
+import './viewuploads.css'
+import { useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux'
+import { Heading } from '../../components/Heading'
+import { add_message, bannerStatuses } from '../../utils/bannerSlice'
+import apiClient from '../../utils/apiClient'
+import UploadsView from './components/UploadsView'
 
 export default function Uploads() {
-  const dispatch = useDispatch();
-  const [uploads, setUploads] = useState([]);
+  const dispatch = useDispatch()
+  const [uploads, setUploads] = useState([])
 
   useEffect(() => {
-    async function getAllUploads(files = [], date = "", folderPath = "") {
-      console.log(date);
-      console.log(folderPath);
+    async function getAllUploads(files = [], date = '', folderPath = '') {
+      console.log(`date: ${date}`)
+      console.log(`folderPath: ${folderPath}`)
       try {
-        const response = await apiClient(
-          `/api/users/images/browse?date=${date}&folderPath=${folderPath}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
+        const response = await window.api.browseImage(date, folderPath)
+        console.log(`browseImage reponse: ${JSON.stringify(response)}`)
         if (!response.ok) {
-          console.error(response.status);
+          console.error(`!response.ok: ${response.error}`)
           dispatch(
             add_message({
               message:
-                "Something went wrong getting upload information. Please contact a developer for further assistance.",
-              status: bannerStatuses.error,
+                'Something went wrong getting upload information. Please contact a developer for further assistance.',
+              status: bannerStatuses.error
             })
-          );
-          return;
+          )
+          return
         }
 
-        const data = await response.json();
-        console.log(data);
-
-        for (const item of data.files) {
-          if (!item.isDirectory) continue;
+        for (const item of response.files) {
+          if (!item.isDirectory) continue
           files.push({
             ...item,
-            parent: `${date ? date + "/" : ""}${
-              folderPath ? folderPath + "/" : ""
-            }`,
-            path: `${date ? date + "/" : ""}${item.path}`,
-          });
-          await getAllUploads(
-            files,
-            date ? date : item.path,
-            date ? item.path : ""
-          );
+            parent: `${date ? date + '/' : ''}${folderPath ? folderPath + '/' : ''}`,
+            path: `${date ? date + '/' : ''}${item.path}`
+          })
+          await getAllUploads(files, date ? date : item.path, date ? item.path : '')
         }
 
-        if (date === "") {
-          setUploads(files);
+        if (date === '') {
+          setUploads(files)
         }
       } catch (err) {
-        console.error(err);
+        console.error(`getAllUploads error: ${err}`)
         dispatch(
           add_message({
             message:
-              "Something went wrong getting upload information. Please contact a developer for further assistance.",
-            status: bannerStatuses.error,
+              'Something went wrong getting upload information. Please contact a developer for further assistance.',
+            status: bannerStatuses.error
           })
-        );
+        )
       }
     }
 
-    getAllUploads();
+    getAllUploads()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [])
 
   return (
     <div className="uploads-wrapper">
@@ -90,5 +73,5 @@ export default function Uploads() {
         <div className="uploads-list uploads-list--empty">No uploads found</div>
       )}
     </div>
-  );
+  )
 }

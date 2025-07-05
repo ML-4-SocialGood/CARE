@@ -3,10 +3,7 @@ import ReactPaginate from "react-paginate";
 import { createPortal } from "react-dom";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import {
-  add_message,
-  bannerStatuses,
-} from "../../../../features/banner/bannerSlice";
+import { add_message, bannerStatuses } from "../../../utils/bannerSlice";
 import closeIcon from "../../../assets/close.png";
 import { Button } from "../../../components/Button";
 import { Heading } from "../../../components/Heading";
@@ -14,8 +11,8 @@ import Modal from "../../../components/Modal";
 import TreeItem from "../../../components/TreeItem";
 import TreeView from "../../../components/TreeView";
 import apiClient from "../../../utils/apiClient";
-import downloadIcon from "../../../assets/icon-reid-download.svg"; 
-import downloadIconOnclick from "../../../assets/icon-reid-download_onclick.svg"; 
+import downloadIcon from "../../../assets/icon-reid-download.svg";
+import downloadIconOnclick from "../../../assets/icon-reid-download_onclick.svg";
 import classNames from "classnames";
 
 export default function ImagesView({ detects, label, confLow, confHigh }) {
@@ -49,7 +46,7 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
   const changePage = ({ selected }) => {
     setCurrentPage(selected);
     setInputPage((selected + 1).toString());
-    handlePreview(files[(selected)*itemsPerPage], files);
+    handlePreview(files[selected * itemsPerPage], files);
   };
 
   useEffect(() => {
@@ -58,11 +55,15 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
     const fetchFiles = async () => {
       setFiles([]);
 
-      console.log(label)
+      console.log(label);
 
       const [date, ...paths] = currentFolder.split("/");
       const response = await apiClient(
-        `/api/users/detect_images/browse?date=${date}&folderPath=${paths.join("/")}${label ? `&label=${label}` : ""}&confLow=${confLow}&confHigh=${confHigh}`,
+        `/api/users/detect_images/browse?date=${date}&folderPath=${paths.join(
+          "/"
+        )}${
+          label ? `&label=${label}` : ""
+        }&confLow=${confLow}&confHigh=${confHigh}`,
         {
           method: "GET",
           headers: {
@@ -82,7 +83,7 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
 
       setFiles(files);
 
-      if (files.length != 0) { 
+      if (files.length != 0) {
         handlePreview(files[0], files);
       } else {
         setPreview(null);
@@ -164,7 +165,9 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
 
   const handleSelectAll = async () => {
     const response = await apiClient(
-      `/api/users/detect_images/select_all?path=${currentFolder}${label ? `&label=${label}` : ""}&confLow=${confLow}&confHigh=${confHigh}`,
+      `/api/users/detect_images/select_all?path=${currentFolder}${
+        label ? `&label=${label}` : ""
+      }&confLow=${confLow}&confHigh=${confHigh}`,
       {
         method: "GET",
         headers: {
@@ -185,7 +188,9 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
 
   const handleDeselectAll = async () => {
     const response = await apiClient(
-      `/api/users/detect_images/select_all?path=${currentFolder}${label ? `&label=${label}` : ""}&confLow=${confLow}&confHigh=${confHigh}`,
+      `/api/users/detect_images/select_all?path=${currentFolder}${
+        label ? `&label=${label}` : ""
+      }&confLow=${confLow}&confHigh=${confHigh}`,
       {
         method: "GET",
         headers: {
@@ -219,25 +224,31 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
     // check if all paths are in current selections
     if (response.ok) {
       const data = await response.json();
-      if (data.selectAllPaths.every((file) => selected.has(file.replaceAll("\\", "/")))){
+      if (
+        data.selectAllPaths.every((file) =>
+          selected.has(file.replaceAll("\\", "/"))
+        )
+      ) {
         return true;
       } else {
         return false;
       }
     }
-  };
+  }
 
   const onDownload = async (file) => {
     const [date, ...paths] = file.path.split("/");
 
     try {
       const response = await apiClient(
-        `/api/users/detect_images/view?date=${date}&imagePath=${paths.join("/")}`,
+        `/api/users/detect_images/view?date=${date}&imagePath=${paths.join(
+          "/"
+        )}`,
         {
           method: "GET",
         }
       );
-  
+
       if (!response.ok) {
         const body = await response.json();
         throw new Error(body.error);
@@ -249,32 +260,36 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', filename);
+      link.setAttribute("download", filename);
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);
-
     } catch (error) {
       console.error("Failed to download result:", error);
-      setNotificationMessage("Failed to download the result. Please try again.");
+      setNotificationMessage(
+        "Failed to download the result. Please try again."
+      );
       setShowNotificationModal(true);
     }
   };
 
   const handleDownload = async () => {
     try {
-      const response = await apiClient('/api/users/detect_images/download_selected', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          selectedPaths: Array.from(selected),
-        }),
-      });
-  
+      const response = await apiClient(
+        "/api/users/detect_images/download_selected",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            selectedPaths: Array.from(selected),
+          }),
+        }
+      );
+
       if (!response.ok) {
         const body = await response.json();
         throw new Error(body.error);
@@ -283,20 +298,20 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
       // Generate timestamp-based zip filename using current timezone in YYYYMMDD_HHMMSS format
       const now = new Date();
       const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-      const day = String(now.getDate()).padStart(2, '0');
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+      const day = String(now.getDate()).padStart(2, "0");
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
 
       const localTimestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
       const filename = `detection_download_${localTimestamp}.zip`;
-  
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', filename);
+      link.setAttribute("download", filename);
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);
@@ -310,18 +325,19 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
       );
     }
   };
-  
 
   return (
     <div className="uploads-view">
       <div className="uploads-folder-list">
         <div className="uploads-folder-container">
-        <TreeView onSelectedChange={(itemId) => {
-          setCurrentFolder(itemId);
-          setPreview(null);
-          }}>
-          <TreeList folders={detects}></TreeList>
-        </TreeView>
+          <TreeView
+            onSelectedChange={(itemId) => {
+              setCurrentFolder(itemId);
+              setPreview(null);
+            }}
+          >
+            <TreeList folders={detects}></TreeList>
+          </TreeView>
         </div>
       </div>
       <div className="uploads-file-list">
@@ -385,8 +401,9 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
               }}
             >
               {generateModalContent(status, completed, total)}
-            </Modal>,
-          </>,          
+            </Modal>
+            ,
+          </>,
           document.body
         )}
     </div>
@@ -395,18 +412,15 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
 
 const terminateAIAndRefresh = async () => {
   try {
-    const response = await apiClient(
-      `/api/users/terminate_ai`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await apiClient(`/api/users/terminate_ai`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
-      throw new Error('(Terminate) AI server error, please contact support.');
+      throw new Error("(Terminate) AI server error, please contact support.");
     }
 
     const data = await response.json();
@@ -415,7 +429,7 @@ const terminateAIAndRefresh = async () => {
     // Once the API call is successful, refresh the page
     window.location.reload();
   } catch (error) {
-    console.error('Error during AI termination:', error);
+    console.error("Error during AI termination:", error);
   }
 };
 
@@ -452,18 +466,18 @@ function PaginateItems({
   setInputPage,
   setPreview,
   handleDownload,
-  selectInputs, 
-  label
+  selectInputs,
+  label,
 }) {
   const [allSelected, setAllSelected] = useState(null);
 
   useEffect(() => {
     const getResult = async () => {
-      const result = await selectInputs(); 
-      setAllSelected(result); 
+      const result = await selectInputs();
+      setAllSelected(result);
     };
 
-    getResult(); 
+    getResult();
   });
 
   const handleInputPageChange = () => {
@@ -484,7 +498,7 @@ function PaginateItems({
       setInputPage(page.toString());
     }
 
-    handlePreview(files[(page-1)*itemsPerPage], files);
+    handlePreview(files[(page - 1) * itemsPerPage], files);
   };
 
   useEffect(() => {
@@ -495,51 +509,49 @@ function PaginateItems({
   if (currentItems.length === 0) {
     return (
       <>
-      <div className="uploads__list__item uploads__list__item_title uploads__list__header">
+        <div className="uploads__list__item uploads__list__item_title uploads__list__header">
           <div className="uploads__list__item__fileinfo">
-            {selected.size > 0 ? (
-              selected.size + " "
-            ):(
-              "No "
-            )} 
+            {selected.size > 0 ? selected.size + " " : "No "}
             files found
             <div className="heading-buttons-container">
               {allSelected ? (
                 <Button
-                className="heading-buttons button-primary"
-                onClick={handleDeselectAll}>
+                  className="heading-buttons button-primary"
+                  onClick={handleDeselectAll}
+                >
                   Deselect all with subfolders
                 </Button>
-              ):(
+              ) : (
                 <Button
-                className="heading-buttons button-primary"
-                onClick={handleSelectAll}>
+                  className="heading-buttons button-primary"
+                  onClick={handleSelectAll}
+                >
                   Select all with subfolders
                 </Button>
               )}
             </div>
           </div>
-      </div>
-      <Button 
-          className="downloadSelected-button button-primary" 
+        </div>
+        <Button
+          className="downloadSelected-button button-primary"
           onClick={handleDownload}
-          disabled={selected.size === 0}  // Disable if nothing is selected
+          disabled={selected.size === 0} // Disable if nothing is selected
         >
           Download Selected
           {selected.size > 0 && (
             <span className="upload-button-count">{selected.size}</span>
           )}
-      </Button>
-      <Button
-        className="analyse-button button-primary"
-        onClick={handleAnalyse}
-        disabled={selected.size === 0 || label === null} // Disable if nothing selected
+        </Button>
+        <Button
+          className="analyse-button button-primary"
+          onClick={handleAnalyse}
+          disabled={selected.size === 0 || label === null} // Disable if nothing selected
         >
-        Run ReID
-        {selected.size > 0 && (
-          <span className="upload-button-count">{selected.size}</span>
-        )}
-      </Button>
+          Run ReID
+          {selected.size > 0 && (
+            <span className="upload-button-count">{selected.size}</span>
+          )}
+        </Button>
       </>
     );
   }
@@ -556,7 +568,7 @@ function PaginateItems({
         handleSelectAll={handleSelectAll}
         handleDeselectAll={handleDeselectAll}
         allSelected={allSelected}
-        />
+      />
 
       <div className="pagination-controls">
         <ReactPaginate
@@ -595,19 +607,19 @@ function PaginateItems({
           </Button>
         </div>
       </div>
-      <Button 
-          className="downloadSelected-button button-primary" 
-          onClick={handleDownload}
-          disabled={selected.size === 0}  // Disable if nothing is selected
-        >
-          Download Selected
-          {selected.size > 0 && (
-            <span className="upload-button-count">{selected.size}</span>
-          )}
+      <Button
+        className="downloadSelected-button button-primary"
+        onClick={handleDownload}
+        disabled={selected.size === 0} // Disable if nothing is selected
+      >
+        Download Selected
+        {selected.size > 0 && (
+          <span className="upload-button-count">{selected.size}</span>
+        )}
       </Button>
       {/* "Run Detection" button always visible */}
-      <Button 
-        className="analyse-button button-primary" 
+      <Button
+        className="analyse-button button-primary"
         onClick={handleAnalyse}
         disabled={selected.size === 0 || !label} // Disable if nothing selected
       >
@@ -634,17 +646,17 @@ function Preview({
   selected,
   setSelected,
   onDownload,
-}) { 
+}) {
   const curindex = preview.index;
   const curindexmod = curindex % itemsPerPage;
   const curPage = Math.floor(curindex / itemsPerPage) + 1;
 
   // Function to navigate to the previous file
   const handlePrev = () => {
-    setInputPage((curPage).toString());
+    setInputPage(curPage.toString());
 
-    if (curPage != (currentPage+1)) {
-      setCurrentPage(curPage-1);
+    if (curPage != currentPage + 1) {
+      setCurrentPage(curPage - 1);
     }
 
     if (files.length === 0) return;
@@ -652,35 +664,36 @@ function Preview({
     const prevIndex = curindex > 0 ? curindex - 1 : 0;
 
     if (curindexmod == 0 && prevIndex != 0) {
-      setCurrentPage(currentPage-1);
+      setCurrentPage(currentPage - 1);
     }
-    
+
     handlePreview(files[prevIndex], files);
   };
 
   // Function to navigate to the next file
   const handleNext = () => {
-    setInputPage((curPage).toString());
+    setInputPage(curPage.toString());
 
-    if (curPage != (currentPage+1)) {
-      setInputPage((curPage).toString());
-      setCurrentPage(curPage-1);
+    if (curPage != currentPage + 1) {
+      setInputPage(curPage.toString());
+      setCurrentPage(curPage - 1);
     }
 
     if (files.length === 0) return;
 
-    const nextIndex = curindex < files.length - 1 ? curindex + 1 : files.length - 1;
+    const nextIndex =
+      curindex < files.length - 1 ? curindex + 1 : files.length - 1;
 
-    if (curindexmod == itemsPerPage-1 && nextIndex != files.length - 1) {
-      setCurrentPage(currentPage+1);
+    if (curindexmod == itemsPerPage - 1 && nextIndex != files.length - 1) {
+      setCurrentPage(currentPage + 1);
     }
-    
+
     handlePreview(files[nextIndex], files);
   };
 
   const closePrev = () => {
     setPreview(null);
-  }
+  };
 
   return (
     <div className="uploads-preview">
@@ -700,19 +713,15 @@ function Preview({
         <button
           className="download_button"
           onClick={(e) => {
-              e.stopPropagation();
-              onDownload(preview);
+            e.stopPropagation();
+            onDownload(preview);
           }}
-          >
+        >
+          <img src={downloadIcon} alt="Download" className={"downloadIcon"} />
           <img
-              src={downloadIcon}
-              alt="Download"
-              className={"downloadIcon"}
-          />
-          <img
-              src={downloadIconOnclick}
-              alt="Download"
-              className={"downloadIcon downloadIconHover"}
+            src={downloadIconOnclick}
+            alt="Download"
+            className={"downloadIcon downloadIconHover"}
           />
         </button>
         <Heading level={2} className="uploads-preview__title">
@@ -735,19 +744,21 @@ function Preview({
               }
               return newSelected;
             });
-          }}>
-        </input>
+          }}
+        ></input>
         <div>
-          <Button 
+          <Button
             className="button-primary prev-arrows"
             onClick={handlePrev}
-            disabled={files.length <= 1}> 
+            disabled={files.length <= 1}
+          >
             Prev
           </Button>
-          <Button 
+          <Button
             className="button-primary prev-arrows"
             onClick={handleNext}
-            disabled={files.length <= 1}> 
+            disabled={files.length <= 1}
+          >
             Next
           </Button>
         </div>
@@ -784,27 +795,25 @@ function FileItem({
     return (
       <div className="uploads__list__item uploads__list__item_title uploads__list__header">
         <div className="uploads__list__item__fileinfo">
-            {selected.size > 0 ? (
-              selected.size + " "
-            ):(
-              "No "
-            )} 
-            files found
-            <div className="heading-buttons-container">
-              {allSelected ? (
-                <Button
+          {selected.size > 0 ? selected.size + " " : "No "}
+          files found
+          <div className="heading-buttons-container">
+            {allSelected ? (
+              <Button
                 className="heading-buttons button-primary"
-                onClick={handleDeselectAll}>
-                  Deselect all with subfolders
-                </Button>
-              ):(
-                <Button
+                onClick={handleDeselectAll}
+              >
+                Deselect all with subfolders
+              </Button>
+            ) : (
+              <Button
                 className="heading-buttons button-primary"
-                onClick={handleSelectAll}>
-                  Select all with subfolders
-                </Button>
-              )}
-            </div>
+                onClick={handleSelectAll}
+              >
+                Select all with subfolders
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -812,73 +821,75 @@ function FileItem({
 
   return (
     <>
-    <ul className="uploads__list__header">
-      <li className="uploads__list__item uploads__list__item_title">
-        <input
-          ref={selectAllRef}
-          type="checkbox"
-          checked={files.every((file) => selected.has(file.path))}
-          onChange={() => {
-            setSelected((prevSelected) => {
-              const newSelected = new Set(prevSelected);
-              if (files.every((file) => newSelected.has(file.path))) {
-                files.forEach((file) => newSelected.delete(file.path));
-              } else {
-                files.forEach((file) => newSelected.add(file.path));
-              }
-              return newSelected;
-            });
-          }}
-        />
-        <div className="uploads__list__item__fileinfo">
-          Select All
-          <div className="heading-buttons-container">
-            {allSelected ? (
-              <Button
-              className="heading-buttons button-primary"
-              onClick={handleDeselectAll}>
-                Deselect all with subfolders
-              </Button>
-            ):(
-              <Button
-              className="heading-buttons button-primary"
-              onClick={handleSelectAll}>
-                Select all with subfolders
-              </Button>
-            )}
-            </div>
-        </div>
-      </li>
-    </ul>
-    <ul className="uploads__list__items">
-      {currentItems.map((file, index) => (
-        <li
-          className={classNames(
-            "uploads__list__item uploads__list__subitem",
-            file.path === preview?.path && "file-name-selected"
-          )}
-          key={`${file.name}-${index}`}
-          onClick={() => handlePreview(file, files)}
-        >
+      <ul className="uploads__list__header">
+        <li className="uploads__list__item uploads__list__item_title">
           <input
+            ref={selectAllRef}
             type="checkbox"
-            checked={selected.has(file.path)}
-            onChange={(event) => {
-              setSelected((selected) => {
-                const newSelected = new Set(selected);
-                if (event.target.checked) {
-                  newSelected.add(file.path);
+            checked={files.every((file) => selected.has(file.path))}
+            onChange={() => {
+              setSelected((prevSelected) => {
+                const newSelected = new Set(prevSelected);
+                if (files.every((file) => newSelected.has(file.path))) {
+                  files.forEach((file) => newSelected.delete(file.path));
                 } else {
-                  newSelected.delete(file.path);
+                  files.forEach((file) => newSelected.add(file.path));
                 }
                 return newSelected;
               });
             }}
           />
-          <span className="file-name">{file.name}</span>
+          <div className="uploads__list__item__fileinfo">
+            Select All
+            <div className="heading-buttons-container">
+              {allSelected ? (
+                <Button
+                  className="heading-buttons button-primary"
+                  onClick={handleDeselectAll}
+                >
+                  Deselect all with subfolders
+                </Button>
+              ) : (
+                <Button
+                  className="heading-buttons button-primary"
+                  onClick={handleSelectAll}
+                >
+                  Select all with subfolders
+                </Button>
+              )}
+            </div>
+          </div>
         </li>
-      ))}
-    </ul>
+      </ul>
+      <ul className="uploads__list__items">
+        {currentItems.map((file, index) => (
+          <li
+            className={classNames(
+              "uploads__list__item uploads__list__subitem",
+              file.path === preview?.path && "file-name-selected"
+            )}
+            key={`${file.name}-${index}`}
+            onClick={() => handlePreview(file, files)}
+          >
+            <input
+              type="checkbox"
+              checked={selected.has(file.path)}
+              onChange={(event) => {
+                setSelected((selected) => {
+                  const newSelected = new Set(selected);
+                  if (event.target.checked) {
+                    newSelected.add(file.path);
+                  } else {
+                    newSelected.delete(file.path);
+                  }
+                  return newSelected;
+                });
+              }}
+            />
+            <span className="file-name">{file.name}</span>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }
@@ -925,9 +936,8 @@ function generateModalContent(status, completed, total) {
         </Heading>
         <p>
           The Re-Identification AI model is processing your selected images.
-          This is a long-running task. <br />
-          A progress bar will appear if the AI server successfully receives your images. 
-          Thanks for your patience.
+          This is a long-running task. <br />A progress bar will appear if the
+          AI server successfully receives your images. Thanks for your patience.
         </p>
 
         {total > 0 && (

@@ -4,10 +4,7 @@ import "./viewimages.css";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Heading } from "../../components/Heading";
-import {
-  add_message,
-  bannerStatuses,
-} from "../../../features/banner/bannerSlice";
+import { add_message, bannerStatuses } from "../../utils/bannerSlice";
 import apiClient from "../../utils/apiClient";
 import ImagesView from "./components/ImagesView";
 import FilterConfidence from "./components/FilterConfidence.jsx";

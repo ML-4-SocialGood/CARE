@@ -4,7 +4,7 @@ import { SiteHeader } from "./SiteHeader";
 import { Footer } from "./Footer";
 import Banner from "./Banner";
 import { useDispatch, useSelector } from "react-redux";
-import { remove_message } from "../../features/banner/bannerSlice";
+import { remove_message } from "../utils/bannerSlice";
 
 export default function SitePage({ component, withHeader, wrapperClass }) {
   const dispatch = useDispatch();

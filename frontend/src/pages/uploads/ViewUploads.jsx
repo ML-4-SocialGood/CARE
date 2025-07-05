@@ -4,10 +4,7 @@ import "./viewuploads.css";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Heading } from "../../components/Heading";
-import {
-  add_message,
-  bannerStatuses,
-} from "../../../features/banner/bannerSlice";
+import { add_message, bannerStatuses } from "../../utils/bannerSlice";
 import apiClient from "../../utils/apiClient";
 import UploadsView from "./components/UploadsView";
 
@@ -49,8 +46,10 @@ export default function Uploads() {
           if (!item.isDirectory) continue;
           files.push({
             ...item,
-            parent: `${date ? date + '/': ''}${folderPath ? folderPath + '/': ''}`,
-            path: `${date ? date + '/': ''}${item.path}`,
+            parent: `${date ? date + "/" : ""}${
+              folderPath ? folderPath + "/" : ""
+            }`,
+            path: `${date ? date + "/" : ""}${item.path}`,
           });
           await getAllUploads(
             files,

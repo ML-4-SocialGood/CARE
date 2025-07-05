@@ -12,7 +12,7 @@ import {
   REGISTER,
 } from "redux-persist";
 import storageSession from "redux-persist/lib/storage/session";
-import bannerReducer from "./features/banner/bannerSlice";
+import bannerReducer from "./src/utils/bannerSlice";
 
 const persistConfig = {
   key: "root",

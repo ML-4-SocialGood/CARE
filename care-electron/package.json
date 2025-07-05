@@ -22,7 +22,14 @@
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
-    "@electron-toolkit/utils": "^4.0.0"
+    "@electron-toolkit/utils": "^4.0.0",
+    "@reduxjs/toolkit": "^2.8.2",
+    "archiver": "^7.0.1",
+    "classnames": "^2.5.1",
+    "clsx": "^2.1.1",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.6.3",
+    "redux-persist": "^6.0.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",

@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { browseImage, viewImage, getImagePaths, downloadSelectedGalleryImages } from './controller'
 
 function createWindow(): void {
   // Create the browser window.
@@ -49,8 +50,12 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.handle('browseImage', (_, date, folderPath) => browseImage(date, folderPath))
+  ipcMain.handle('viewImage', (_, date, imagePath) => viewImage(date, imagePath))
+  ipcMain.handle('getImagePaths', (_, currentFolder) => getImagePaths(currentFolder))
+  ipcMain.handle('downloadSelectedGalleryImages', (_, selectedPaths) =>
+    downloadSelectedGalleryImages(selectedPaths)
+  )
 
   createWindow()
 

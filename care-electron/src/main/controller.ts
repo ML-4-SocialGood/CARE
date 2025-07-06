@@ -4,7 +4,18 @@ import archiver from 'archiver'
 import { spawn, ChildProcess } from 'node:child_process'
 import os from 'os'
 
-const userProfileDir = '/Users/cpearce/src/CARE-untouched/backend'
+function getAppDataDir() {
+  if (process.platform === 'win32') {
+    let appDataPath = process.env.APPDATA || process.env.LOCALAPPDATA
+    if (appDataPath) {
+      return path.join(appDataPath, 'ml4sg-care')
+    }
+  }
+  return path.join(os.homedir(), '.ml4sg-care')
+}
+
+const userProfileDir = getAppDataDir()
+const PYTHON_SCRIPT_PATH = path.join(__dirname, '../../../backend/ai_server/main.py')
 
 export async function uploadImage(relativePath: string, file: Uint8Array) {
   try {
@@ -349,7 +360,8 @@ function spawnPythonSubprocess(args: string[]) {
       throw e
     }
   } else {
-    const scriptPath = path.join(userProfileDir, 'ai_server/main.py')
+    // Dev environment. Find script relative to this file.
+    const scriptPath = PYTHON_SCRIPT_PATH
     const condaEnv = process.env.DEVICE == 'GPU' ? 'CARE-GPU' : 'CARE'
     const python = os.platform() == 'win32' ? 'python' : 'python3'
     args = ['run', '--no-capture-output', '-n', condaEnv, python, scriptPath].concat(args)
@@ -410,7 +422,8 @@ export async function detect(selectedPaths: string[], stream: (txt: string) => v
       'detection-' + device,
       path.join(userProfileDir, 'temp/image_detection_pending', userIdFolder),
       path.join(userProfileDir, 'data/image_marked', userIdFolder),
-      path.join(userProfileDir, 'data/image_cropped_json', userIdFolder)
+      path.join(userProfileDir, 'data/image_cropped_json', userIdFolder),
+      path.join(userProfileDir, 'logs')
     ]
     let ps = spawnPythonSubprocess(args)
     // Note: We track the process on a global, but only reference it in a local var, as another
@@ -720,7 +733,8 @@ export async function runReid(selectedPaths: string[], stream: (txt: string) => 
       path.join(userProfileDir, 'temp/image_reid_pending', userIdFolder),
       path.join(userProfileDir, 'data/image_cropped_json', userIdFolder),
       path.join(userProfileDir, 'temp/image_cropped_reid_pending', userIdFolder),
-      path.join(userProfileDir, 'data/image_reid_output', userIdFolder)
+      path.join(userProfileDir, 'data/image_reid_output', userIdFolder),
+      path.join(userProfileDir, 'logs')
     ]
     let ps = spawnPythonSubprocess(args)
     if (!ps) {
@@ -1043,4 +1057,8 @@ export async function renameReidGroup(
     console.error(error)
     return { ok: false, error: 'renameReidGroup: ' + error }
   }
+}
+
+export function terminateAI() {
+  terminateSubprocess()
 }

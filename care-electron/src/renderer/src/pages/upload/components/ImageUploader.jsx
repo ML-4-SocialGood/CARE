@@ -12,7 +12,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 
 import { add_message, bannerStatuses } from '../../../utils/bannerSlice'
-import apiClient from '../../../utils/apiClient'
 
 const statuses = {
   initial: 'Initial',

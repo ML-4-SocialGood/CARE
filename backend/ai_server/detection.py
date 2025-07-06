@@ -7,6 +7,7 @@ import time
 
 from datetime import datetime
 from ultralytics import YOLO
+from pathlib import Path
 
 
 yolo_model = None    # global variable
@@ -17,8 +18,12 @@ def init_process(yolo_model_path):
     yolo_model = YOLO(yolo_model_path).to(DEVICE)
 
 
-def create_log_file():
-    log_dir = "detection_logs"
+def create_log_file(log_dir: str = '') -> str:
+    """
+    Create a log file with a timestamp.
+    """
+    if not log_dir:
+        log_dir = os.path.join(Path.home(), ".ml4sg-care", "logs")
     os.makedirs(log_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return os.path.join(log_dir, f"{timestamp}_detection_log.txt")
@@ -197,8 +202,8 @@ def process_images_with_pool(yolo_model_path, original_images_dir, output_dir, j
     print("STATUS: DONE", flush=True)
 
 
-def run(original_images_dir, output_images_dir, json_output_dir):
-    log_file = create_log_file()
+def run(original_images_dir, output_images_dir, json_output_dir, log_dir):
+    log_file = create_log_file(log_dir)
 
     yolo_model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Detector.pt")
     start_time = time.time()

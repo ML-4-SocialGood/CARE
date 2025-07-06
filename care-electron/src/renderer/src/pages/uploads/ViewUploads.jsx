@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { Heading } from '../../components/Heading'
 import { add_message, bannerStatuses } from '../../utils/bannerSlice'
-import apiClient from '../../utils/apiClient'
 import UploadsView from './components/UploadsView'
 
 export default function Uploads() {

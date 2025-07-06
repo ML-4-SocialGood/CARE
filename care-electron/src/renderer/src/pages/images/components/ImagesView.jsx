@@ -10,7 +10,6 @@ import { Heading } from '../../../components/Heading'
 import Modal from '../../../components/Modal'
 import TreeItem from '../../../components/TreeItem'
 import TreeView from '../../../components/TreeView'
-import apiClient from '../../../utils/apiClient'
 import downloadIcon from '../../../assets/icon-reid-download.svg'
 import downloadIconOnclick from '../../../assets/icon-reid-download_onclick.svg'
 import classNames from 'classnames'
@@ -340,20 +339,7 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
 
 const terminateAIAndRefresh = async () => {
   try {
-    const response = await apiClient(`/api/users/terminate_ai`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      throw new Error('(Terminate) AI server error, please contact support.')
-    }
-
-    const data = await response.json()
-    // console.log(data);
-
+    await window.api.terminateAI()
     // Once the API call is successful, refresh the page
     window.location.reload()
   } catch (error) {

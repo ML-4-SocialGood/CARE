@@ -39,7 +39,8 @@ const api = {
   deleteReidResult: (date: string, time: string) =>
     ipcRenderer.invoke('deleteReidResult', date, time),
   renameReidGroup: (date: string, time: string, old_group_id: string, new_group_id: string) =>
-    ipcRenderer.invoke('renameReidGroup', date, time, old_group_id, new_group_id)
+    ipcRenderer.invoke('renameReidGroup', date, time, old_group_id, new_group_id),
+  terminateAI: () => ipcRenderer.invoke('terminateAI')
 }
 
 if (process.contextIsolated) {

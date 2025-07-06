@@ -7,10 +7,15 @@ import torch
 
 from datetime import datetime
 from ultralytics import YOLO
+from pathlib import Path
 
 
-def create_log_file():
-    log_dir = "detection_logs"
+def create_log_file(log_dir: str = '') -> str:
+    """
+    Create a log file with a timestamp.
+    """
+    if not log_dir:
+        log_dir = os.path.join(Path.home(), ".ml4sg-care", "logs")
     os.makedirs(log_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return os.path.join(log_dir, f"{timestamp}_detection_log.txt")
@@ -134,8 +139,8 @@ def save_detection_results(image_paths, predictions, image_output_path, original
             log_message(log_file, f"Error processing image: {str(e)}")
 
 
-def run(original_images_dir, output_dir, json_output_dir):
-    log_file = create_log_file()
+def run(original_images_dir, output_dir, json_output_dir, log_dir=''):
+    log_file = create_log_file(log_dir)
     yolo_model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Detector_GPU.pt")
     try:
         DEVICE = "cuda"

@@ -11,13 +11,14 @@ import torchvision.transforms as T
 from config import cfg
 from datetime import datetime
 from PIL import Image
+from pathlib import Path
 
-
-def create_log_file():
+def create_log_file(log_dir: str = '') -> str:
     """
     Create a log file with a timestamp.
     """
-    log_dir = "reid_logs"
+    if not log_dir:
+        log_dir = os.path.join(Path.home(), ".ml4sg-care", "logs")
     os.makedirs(log_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return os.path.join(log_dir, f"{timestamp}_reid_log.txt")
@@ -249,9 +250,8 @@ def clear_cropped_folder(cropped_dir, log_file):
                 log_message(log_file, f"Error deleting directory {dir_path}: {e}")
 
 
-def run(image_dir, json_dir, output_dir, reid_output_dir):
-
-    log_file = create_log_file()
+def run(image_dir, json_dir, output_dir, reid_output_dir, log_dir = ''):
+    log_file = create_log_file(log_dir)
     clear_cropped_folder(output_dir, log_file)
 
     print("STATUS: BEGIN", flush=True)

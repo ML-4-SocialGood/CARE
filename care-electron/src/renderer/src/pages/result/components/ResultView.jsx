@@ -4,7 +4,6 @@ import { Button } from '../../../components/Button.jsx'
 import { Heading } from '../../../components/Heading.jsx'
 import TreeItem from '../../../components/TreeItem.jsx'
 import TreeView from '../../../components/TreeView.jsx'
-import apiClient from '../../../utils/apiClient.js'
 
 export default function ResultView({ folders, files }) {
   const [currentFolder, setCurrentFolder] = useState('')

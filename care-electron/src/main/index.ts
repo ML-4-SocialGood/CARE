@@ -16,6 +16,7 @@ import {
   getImagePaths,
   renameReidGroup,
   runReid,
+  terminateAI,
   uploadImage,
   viewDetectImage,
   viewImage
@@ -105,6 +106,7 @@ app.whenReady().then(() => {
   ipcMain.handle('renameReidGroup', (_, date, time, old_group_id, new_group_id) =>
     renameReidGroup(date, time, old_group_id, new_group_id)
   )
+  ipcMain.handle('terminateAI', (_) => terminateAI())
 
   createWindow()
 

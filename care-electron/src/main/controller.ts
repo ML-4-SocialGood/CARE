@@ -409,8 +409,8 @@ export async function detect(selectedPaths: string[], stream: (txt: string) => v
     let args = [
       'detection-' + device,
       path.join(userProfileDir, 'temp/image_detection_pending', userIdFolder),
-      path.join(userProfileDir, 'temp/image_marked', userIdFolder),
-      path.join(userProfileDir, 'temp/image_cropped_json', userIdFolder)
+      path.join(userProfileDir, 'data/image_marked', userIdFolder),
+      path.join(userProfileDir, 'data/image_cropped_json', userIdFolder)
     ]
     let ps = spawnPythonSubprocess(args)
     // Note: We track the process on a global, but only reference it in a local var, as another
@@ -718,9 +718,9 @@ export async function runReid(selectedPaths: string[], stream: (txt: string) => 
     let args = [
       'reid-' + device,
       path.join(userProfileDir, 'temp/image_reid_pending', userIdFolder),
-      path.join(userProfileDir, 'temp/image_cropped_json', userIdFolder),
+      path.join(userProfileDir, 'data/image_cropped_json', userIdFolder),
       path.join(userProfileDir, 'temp/image_cropped_reid_pending', userIdFolder),
-      path.join(userProfileDir, 'temp/image_reid_output', userIdFolder)
+      path.join(userProfileDir, 'data/image_reid_output', userIdFolder)
     ]
     let ps = spawnPythonSubprocess(args)
     if (!ps) {

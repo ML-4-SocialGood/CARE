@@ -113,7 +113,7 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
       setStatus(statuses.processing)
       window.api.addStreamListener(streamListener)
       const selectedPaths = Array.from(selected)
-      const response = await window.api.detect(selectedPaths)
+      const response = await window.api.runReid(selectedPaths)
       if (!response.ok) {
         setStatus('')
         throw new Error('reid failed: ' + response.error)

@@ -116,11 +116,7 @@ export default function ImagesView({ detects: initialDetects }) {
     const [date, time] = itemId.split('/')
 
     try {
-      const response = await apiClient(`/api/users/reid_images/delete?date=${date}&time=${time}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      })
-
+      const response = await window.api.deleteReidResult(date, time)
       if (response.ok) {
         // Show a success notification modal after deletion
         setNotificationMessage(`Successfully deleted the record for date ${date} and time ${time}.`)
@@ -152,8 +148,7 @@ export default function ImagesView({ detects: initialDetects }) {
 
         setShowDeleteModal(false)
       } else {
-        const errorData = await response.json()
-        setNotificationMessage(`Failed to delete: ${errorData.error}`)
+        setNotificationMessage(`Failed to delete: ${response.error}`)
         setShowNotificationModal(true)
       }
     } catch (error) {
@@ -162,56 +157,6 @@ export default function ImagesView({ detects: initialDetects }) {
       setShowNotificationModal(true)
     }
   }
-
-  /*
-  const onRename = async (itemId, oldLabel) => {
-    // example "20241007/165914/ID-1"
-    const [date, time, oldGroupId] = itemId.split("/");
-    console.log("itemId:", itemId);
-    const newGroupId = prompt(`Enter the new name for the group (currently "${oldLabel}"):`);
-
-    if (newGroupId && newGroupId !== oldGroupId) {
-      try {
-        const response = await apiClient(
-            `/api/users/reid_images/rename?date=${date}&time=${time}&old_group_id=${oldGroupId}&new_group_id=${newGroupId}`,
-            {
-              method: "POST",
-              credentials: 'include',
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-        );
-
-        if (response.ok) {
-          setDetects((prevDetects) => {
-            return prevDetects.map((folder) => {
-              if (folder.path === itemId) {
-                return {
-                  ...folder,
-                  name: newGroupId,
-                  path: `${date}/${time}/${newGroupId}`,
-                };
-              }
-              return folder;
-            });
-          });
-
-          alert(`Successfully renamed group from "${oldGroupId}" to "${newGroupId}".`);
-        } else if (response.status === 409) {
-          // 409 Conflict: The name already exists. Please choose a different name.
-          alert(`Failed to rename: The name "${newGroupId}" already exists. Please choose a different name.`);
-        } else {
-          const errorData = await response.json();
-          alert(`Failed to rename: ${errorData.error}`);
-        }
-      } catch (error) {
-        console.error("Failed to rename group:", error);
-        alert("Failed to rename the group. Please try again.");
-      }
-    }
-  };
-*/
 
   const onRename = (itemId, currentName) => {
     console.log('Rename button clicked, itemId:', itemId)
@@ -223,49 +168,31 @@ export default function ImagesView({ detects: initialDetects }) {
   const handleConfirmRename = async (itemId) => {
     console.log('handleConfirmRename called, itemId:', itemId)
     const [date, time, oldGroupId] = itemId.split('/')
-
     if (newID) {
-      try {
-        const response = await apiClient(
-          `/api/users/reid_images/rename?date=${date}&time=${time}&old_group_id=${oldGroupId}&new_group_id=${newID}`,
-          {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
+      if (newID === oldGroupId) {
+        setNotificationMessage(
+          'The new name is the same as the old name. The group name will not change.'
         )
-
+        setShowNotificationModal(true)
+        return
+      }
+      try {
+        const response = await window.api.renameReidGroup(date, time, oldGroupId, newID)
         if (response.ok) {
-          console.log(newID, oldGroupId)
-          if (newID === oldGroupId) {
-            setNotificationMessage(
-              'The new name is the same as the old name. The group name will not change.'
+          console.log('Rename successful')
+          setDetects((prevDetects) =>
+            prevDetects.map((folder) =>
+              folder.path === itemId
+                ? { ...folder, name: newID, group_id: newID, path: `${date}/${time}/${newID}` }
+                : folder
             )
-            setShowNotificationModal(true)
-          } else {
-            console.log('Rename successful')
-
-            setDetects((prevDetects) =>
-              prevDetects.map((folder) =>
-                folder.path === itemId
-                  ? { ...folder, name: newID, group_id: newID, path: `${date}/${time}/${newID}` }
-                  : folder
-              )
-            )
-            fetchFiles(newID)
-
-            setShowRenameModal(false)
-            setNotificationMessage(`Successfully renamed from "${oldGroupId}" to "${newID}".`)
-            setShowNotificationModal(true)
-          }
-        } else if (response.status === 409) {
-          setNotificationMessage('The name already exists. Please choose a different name.')
+          )
+          fetchFiles(newID)
+          setShowRenameModal(false)
+          setNotificationMessage(`Successfully renamed from "${oldGroupId}" to "${newID}".`)
           setShowNotificationModal(true)
         } else {
-          const errorData = await response.json()
-          setNotificationMessage(`Failed to rename: ${errorData.error}`)
+          setNotificationMessage(response.message)
           setShowNotificationModal(true)
         }
       } catch (error) {

@@ -924,3 +924,123 @@ export async function browseReidImage(date: string, time: string, group_id: stri
     return { ok: false, error: 'browseReidImage: ' + error }
   }
 }
+
+export async function deleteReidResult(date: string, time: string) {
+  try {
+    const userIdFolder = '1'
+    const baseDir = path.join(userProfileDir, 'data/image_reid_output', userIdFolder)
+
+    if (!date || !time) {
+      return { ok: false, error: 'Missing one or more parameters: date, time.' }
+    }
+
+    const timeJson = time + '.json'
+    const deteleDir = path.join(date, timeJson)
+    const targetDir = path.resolve(baseDir, deteleDir)
+
+    // Ensure the resolved path is still within the baseDir
+    if (!targetDir.startsWith(baseDir)) {
+      return { ok: false, error: 'Invalid path.' }
+    }
+
+    // Check if the target exists
+    if (await fs.pathExists(targetDir)) {
+      await fs.remove(targetDir) // Remove the file or directory
+
+      // Check if the date folder is now empty
+      const dateDir = path.join(targetDir, '..')
+      const remainingFiles = await fs.readdir(dateDir)
+      if (remainingFiles.length === 0) {
+        await fs.remove(dateDir) // Remove the date folder if empty
+      }
+
+      return {
+        ok: true,
+        message: `ReID result (date = ${date}, time = ${time}) deleted successfully.`
+      }
+    } else {
+      return { ok: false, error: `ReID result (date = ${date}, time = ${time}) not found.` }
+    }
+  } catch (error) {
+    console.error(error)
+    return { ok: false, error: 'deleteReidMessage: ' + error }
+  }
+}
+
+export async function renameReidGroup(
+  date: string,
+  time: string,
+  old_group_id: string,
+  new_group_id: string
+) {
+  try {
+    const userIdFolder = '1'
+    const baseDir = path.join(userProfileDir, 'data/image_reid_output', userIdFolder)
+    let targetDir: string
+
+    if (!date || !time || !old_group_id || !new_group_id) {
+      return {
+        ok: false,
+        error: 'Missing one or more query parameters: date, time, old_group_id, new_group_id.'
+      }
+    }
+
+    const timeJson = time + '.json'
+    let relDir = path.join(date, timeJson)
+    targetDir = path.resolve(baseDir, relDir) // Resolve the full path
+
+    // Ensure the resolved path is still within the baseDir
+    if (!targetDir.startsWith(baseDir)) {
+      return { ok: false, error: 'Invalid folder path.' }
+    }
+
+    // Check if the directory exists before reading it
+    if (!(await fs.pathExists(targetDir))) {
+      return { ok: false, error: 'Directory not found.' }
+    }
+
+    // Read the JSON file
+    const fileData = await fs.readJson(targetDir)
+
+    // Check if old_group_id exists
+    if (!fileData.hasOwnProperty(old_group_id)) {
+      return { ok: false, error: `Key "${old_group_id}" not found.` }
+    }
+
+    // Check if new_group_id already exists
+    if (fileData.hasOwnProperty(new_group_id)) {
+      if (new_group_id === old_group_id) {
+        return {
+          ok: true,
+          message: 'The new name is the same as the old name. The group name will not change. '
+        }
+      }
+      return {
+        ok: false,
+        message: `Key "${new_group_id}" already exists. Chose a different name.`
+      }
+    }
+
+    // Create a new object to maintain the original order of keys
+    const newData = {}
+
+    // Loop through the existing keys in fileData
+    Object.keys(fileData).forEach((key) => {
+      // If the key is the old_group_id, add it to newData with the new_group_id
+      if (key === old_group_id) {
+        newData[new_group_id] = fileData[old_group_id]
+      } else {
+        // Otherwise, just copy the existing key-value pair
+        newData[key] = fileData[key]
+      }
+    })
+
+    // Write the modified JSON back to the file
+    await fs.writeJson(targetDir, newData, { spaces: 4 })
+
+    return { ok: true, message: `Successfully renamed from ${old_group_id} to ${new_group_id}.` }
+  } catch (error) {
+    console.error(error)
+    return { ok: false, error: 'renameReidGroup: ' + error }
+  }
+}

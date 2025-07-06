@@ -55,18 +55,12 @@ export default function ImagesView({ detects: initialDetects }) {
       if (!selectedFolder.group_id) return
 
       try {
-        const response = await apiClient(
-          `/api/users/reid_images/browse?date=${selectedFolder.date}&time=${selectedFolder.time}&group_id=${selectedFolder.group_id}`, // Switch to ReID API endpoint
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
+        const response = await window.api.browseReidImage(
+          selectedFolder.date,
+          selectedFolder.time,
+          selectedFolder.group_id
         )
-
-        const data = await response.json()
-        const files = data.files
+        const files = response.files
           .filter((item) => !item.isDirectory)
           .map((item) => ({
             ...item,
@@ -290,23 +284,17 @@ export default function ImagesView({ detects: initialDetects }) {
     if (!selectedFolder || !selectedFolder.group_id) return
 
     try {
-      const response = await apiClient(
-        `/api/users/reid_images/browse?date=${selectedFolder.date}&time=${selectedFolder.time}&group_id=${selectedFolder.group_id}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+      const response = await window.api.browseReidImage(
+        selectedFolder.date,
+        selectedFolder.time,
+        selectedFolder.group_id
       )
-
       if (!response.ok) {
-        console.error('Failed to fetch files:', response.statusText)
+        console.error('Failed to fetch files:', response.error)
         return
       }
 
-      const data = await response.json()
-      const files = data.files
+      const files = response.files
         .filter((item) => !item.isDirectory)
         .map((item) => ({
           ...item,
@@ -340,25 +328,12 @@ export default function ImagesView({ detects: initialDetects }) {
     const [date, time] = itemId.split('/')
 
     try {
-      const response = await apiClient(
-        `/api/users/reid_images/download_selected?date=${date}&time=${time}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-
+      const response = await window.api.downloadReidImages(date, time)
       if (!response.ok) {
-        const body = await response.json()
-        throw new Error(body.error)
+        throw new Error(response.error)
       }
-
       const filename = `reid_${date}_${time}.zip`
-
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(new Blob([blob]))
+      const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
       link.setAttribute('download', filename)

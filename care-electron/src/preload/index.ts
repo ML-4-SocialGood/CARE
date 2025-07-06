@@ -31,7 +31,11 @@ const api = {
     ipcRenderer.invoke('downloadDetectImages', filterLabel),
   downloadSelectedDetectImages: (selectPaths: string[]) =>
     ipcRenderer.invoke('downloadSelectedDetectImages', selectPaths),
-  runReid: (selectPaths: string[]) => ipcRenderer.invoke('runReid', selectPaths)
+  runReid: (selectPaths: string[]) => ipcRenderer.invoke('runReid', selectPaths),
+  browseReidImage: (date: string, time: string, group_id: string) =>
+    ipcRenderer.invoke('browseReidImage', date, time, group_id),
+  downloadReidImages: (date: string, time: string) =>
+    ipcRenderer.invoke('downloadReidImages', date, time)
 }
 
 if (process.contextIsolated) {

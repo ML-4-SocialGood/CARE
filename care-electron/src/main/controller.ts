@@ -607,3 +607,90 @@ export async function downloadSelectedDetectImages(selectPaths: string[]) {
     return { ok: false, error: 'downloadSelectedDetectImages failed: ' + error }
   }
 }
+
+export async function runReid(selectedPaths: string[], stream: (txt: string) => void) {
+  const userIdFolder = '1'
+  const tempImagePath = path.join(userProfileDir, 'temp/image_reid_pending', userIdFolder)
+  const tempJsonPath = path.join(userProfileDir, 'temp/image_cropped_reid_pending', userIdFolder)
+  try {
+    terminateSubprocess()
+    await fs.remove(tempImagePath)
+    await fs.remove(tempJsonPath)
+
+    if (!selectedPaths || !Array.isArray(selectedPaths) || selectedPaths.length === 0) {
+      return { ok: false, error: 'No images selected or invalid format.' }
+    }
+
+    // Copy selected image to a temp folder for ReID
+    for (const imagePath of selectedPaths) {
+      const baseDir = path.join(userProfileDir, 'data/image_uploaded', userIdFolder)
+      const srcPath = path.resolve(baseDir, imagePath) // Resolve the full path
+
+      // Ensure the resolved path is still within the baseDir
+      if (!srcPath.startsWith(baseDir)) {
+        await fs.remove(tempImagePath)
+        await fs.remove(tempJsonPath)
+        return { ok: false, error: 'Invalid folder path.' }
+      }
+
+      const destPath = path.join(userProfileDir, 'temp/image_reid_pending', userIdFolder, imagePath)
+
+      // Check if the source image exists
+      if (await fs.pathExists(srcPath)) {
+        // Ensure the destination directory exists
+        await fs.ensureDir(path.dirname(destPath))
+
+        // Copy the image
+        await fs.copy(srcPath, destPath)
+      } else {
+        console.warn(`runReid: File not found: ${imagePath}`)
+      }
+    }
+
+    const device = process.env.DEVICE === 'GPU' ? 'gpu' : 'cpu'
+    let args = [
+      'reid-' + device,
+      path.join(userProfileDir, 'temp/image_reid_pending', userIdFolder),
+      path.join(userProfileDir, 'temp/image_cropped_json', userIdFolder),
+      path.join(userProfileDir, 'temp/image_cropped_reid_pending', userIdFolder),
+      path.join(userProfileDir, 'temp/image_reid_output', userIdFolder)
+    ]
+    let ps = spawnPythonSubprocess(args)
+    if (!ps) {
+      return { ok: false, error: 'Failed to start process' }
+    }
+
+    // Note: We track the process on a global, but only reference it in a local var, as another
+    // event handler could clear the global var.
+    subProcess = ps
+
+    if (ps.stdout) {
+      ps.stdout.on('data', (data) => {
+        console.log(`stdout: ${data}`)
+        stream(data)
+      })
+    }
+    if (ps.stderr) {
+      ps.stderr.on('data', (data) => {
+        console.log(`stderr: ${data}`)
+        stream(data)
+      })
+    }
+
+    return await new Promise((resolve, reject) => {
+      ps.on('close', (code) => {
+        console.log(`child process exited with code ${code}`)
+        fs.remove(tempImagePath)
+        if (code != 0) {
+          reject({ ok: false, error: 'ERROR: Detection AI model error, please contact support.' })
+        }
+        subProcess = null
+        resolve({ ok: true })
+      })
+    })
+  } catch (error) {
+    return { ok: false, error: 'runReid failed: ' + error }
+  } finally {
+    await fs.remove(tempImagePath)
+  }
+}

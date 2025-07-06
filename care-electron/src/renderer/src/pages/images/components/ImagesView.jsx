@@ -100,42 +100,25 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
   const handleAnalyse = async () => {
     if (status) return
 
+    const streamListener = (_, text) => {
+      const lines = new TextDecoder().decode(text).split('\n')
+      for (const line of lines) {
+        if (/PROCESS: (\d+)\/(\d+)/.test(line)) {
+          setCompleted(+RegExp.$1)
+          setTotal(+RegExp.$2)
+        }
+      }
+    }
     try {
       setStatus(statuses.processing)
-
-      const response = await apiClient('/api/users/detect_images/reid', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          selectedPaths: Array.from(selected)
-        })
-      })
-
+      window.api.addStreamListener(streamListener)
+      const selectedPaths = Array.from(selected)
+      const response = await window.api.detect(selectedPaths)
       if (!response.ok) {
         setStatus('')
-        const body = await response.json()
-        throw new Error(body.error)
+        throw new Error('reid failed: ' + response.error)
       }
-
-      const reader = response.body.getReader()
-      let done, value
-      while (!done) {
-        ;({ value, done } = await reader.read())
-        if (done) {
-          setTimeout(() => navigate('/reid'), 1000)
-          break
-        }
-        const text = new TextDecoder().decode(value)
-        const lines = text.split('\n')
-        for (const line of lines) {
-          if (/PROCESS: (\d+)\/(\d+)/.test(line)) {
-            setCompleted(+RegExp.$1)
-            setTotal(+RegExp.$2)
-          }
-        }
-      }
+      setTimeout(() => navigate('/reid'), 1000)
     } catch (err) {
       setStatus('')
       console.error(err)
@@ -145,6 +128,8 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
           status: bannerStatuses.error
         })
       )
+    } finally {
+      window.api.removeStreamListener(streamListener)
     }
   }
 

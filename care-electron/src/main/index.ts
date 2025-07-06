@@ -7,12 +7,14 @@ import {
   browseImage,
   browseReidImage,
   detect,
+  deleteReidResult,
   downloadSelectedGalleryImages,
   downloadDetectImages,
   downloadReidImages,
   downloadSelectedDetectImages,
   getDetectImagePaths,
   getImagePaths,
+  renameReidGroup,
   runReid,
   uploadImage,
   viewDetectImage,
@@ -99,6 +101,10 @@ app.whenReady().then(() => {
     browseReidImage(date, time, group_id)
   )
   ipcMain.handle('downloadReidImages', (_, date, time) => downloadReidImages(date, time))
+  ipcMain.handle('deleteReidResult', (_, date, time) => deleteReidResult(date, time))
+  ipcMain.handle('renameReidGroup', (_, date, time, old_group_id, new_group_id) =>
+    renameReidGroup(date, time, old_group_id, new_group_id)
+  )
 
   createWindow()
 

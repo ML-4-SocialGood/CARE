@@ -35,7 +35,11 @@ const api = {
   browseReidImage: (date: string, time: string, group_id: string) =>
     ipcRenderer.invoke('browseReidImage', date, time, group_id),
   downloadReidImages: (date: string, time: string) =>
-    ipcRenderer.invoke('downloadReidImages', date, time)
+    ipcRenderer.invoke('downloadReidImages', date, time),
+  deleteReidResult: (date: string, time: string) =>
+    ipcRenderer.invoke('deleteReidResult', date, time),
+  renameReidGroup: (date: string, time: string, old_group_id: string, new_group_id: string) =>
+    ipcRenderer.invoke('renameReidGroup', date, time, old_group_id, new_group_id)
 }
 
 if (process.contextIsolated) {

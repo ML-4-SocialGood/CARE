@@ -18,7 +18,6 @@ export default function Uploads() {
       console.log(`folderPath: ${folderPath}`)
       try {
         const response = await window.api.browseImage(date, folderPath)
-        console.log(`browseImage reponse: ${JSON.stringify(response)}`)
         if (!response.ok) {
           console.error(`!response.ok: ${response.error}`)
           dispatch(

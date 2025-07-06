@@ -1,182 +1,146 @@
 /** @format */
 
-import "./viewimages.css";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { Heading } from "../../components/Heading";
-import { add_message, bannerStatuses } from "../../utils/bannerSlice";
-import apiClient from "../../utils/apiClient";
-import ImagesView from "./components/ImagesView";
-import FilterConfidence from "./components/FilterConfidence.jsx";
-import FilterDropdown from "./components/FilterDropdown.jsx";
+import './viewimages.css'
+import { useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux'
+import { Heading } from '../../components/Heading'
+import { add_message, bannerStatuses } from '../../utils/bannerSlice'
+import apiClient from '../../utils/apiClient'
+import ImagesView from './components/ImagesView'
+import FilterConfidence from './components/FilterConfidence.jsx'
+import FilterDropdown from './components/FilterDropdown.jsx'
 
 export default function Images() {
-  const dispatch = useDispatch();
-  const [detects, setDetects] = useState([]);
-  const [selectedSpecies, setSpecies] = useState(null);
-  const [confLow, setConfLow] = useState("0");
-  const [confHigh, setConfHigh] = useState("1");
-  const [isLoading, setIsLoading] = useState(false); // Track loading state
+  const dispatch = useDispatch()
+  const [detects, setDetects] = useState([])
+  const [selectedSpecies, setSpecies] = useState(null)
+  const [confLow, setConfLow] = useState('0')
+  const [confHigh, setConfHigh] = useState('1')
+  const [isLoading, setIsLoading] = useState(false) // Track loading state
 
   const labels = [
-    "No Detection",
-    "Bird",
-    "Cat",
-    "Deer",
-    "Dog",
-    "Ferret",
-    "Goat",
-    "Hedgehog",
-    "Kiwi",
-    "Lagomorph",
-    "Livestock",
-    "Pig",
-    "Possum",
-    "Rodent",
-    "Stoat",
-    "Wallaby",
-  ];
+    'No Detection',
+    'Bird',
+    'Cat',
+    'Deer',
+    'Dog',
+    'Ferret',
+    'Goat',
+    'Hedgehog',
+    'Kiwi',
+    'Lagomorph',
+    'Livestock',
+    'Pig',
+    'Possum',
+    'Rodent',
+    'Stoat',
+    'Wallaby'
+  ]
 
   const handleSpeciesSelect = async (species) => {
-    setSpecies(species);
-  };
+    setSpecies(species)
+  }
 
   const handleConfidenceChange = ({ confLow, confHigh }) => {
-    setConfLow(confLow);
-    setConfHigh(confHigh);
-  };
+    setConfLow(confLow)
+    setConfHigh(confHigh)
+  }
 
   const handleDownload = async () => {
     // Set loading state to true before making the API request
-    setIsLoading(true);
-
-    // Construct the URL without a label if selectedSpecies is null
-    const downloadUrl = selectedSpecies
-      ? `/api/users/detect_images/download?label=${selectedSpecies}`
-      : `/api/users/detect_images/download`;
-
+    setIsLoading(true)
     try {
-      const response = await apiClient(downloadUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        responseType: "blob", // Important to handle binary data
-      });
-
+      const response = await window.api.downloadDetectImages(selectedSpecies)
       if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = selectedSpecies
-          ? `${selectedSpecies}_images.zip`
-          : `all_images.zip`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
+        const blob = new Blob([response.data], { type: 'application/octet-stream' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = selectedSpecies ? `${selectedSpecies}_images.zip` : `all_images.zip`
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        window.URL.revokeObjectURL(url)
       } else {
-        const errorText = await response.text();
+        const errorText = await response.text()
         dispatch(
           add_message({
-            message:
-              errorText || "Failed to download images. Please try again.",
-            status: bannerStatuses.error,
+            message: errorText || 'Failed to download images. Please try again.',
+            status: bannerStatuses.error
           })
-        );
+        )
       }
     } catch (err) {
-      console.error(err);
+      console.error(err)
       dispatch(
         add_message({
-          message:
-            "Something went wrong while downloading. Please contact a developer.",
-          status: bannerStatuses.error,
+          message: 'Something went wrong while downloading. Please contact a developer.',
+          status: bannerStatuses.error
         })
-      );
+      )
     } finally {
       // Set loading state back to false after the download completes or fails
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    async function getAllImages(
-      files = [],
-      date = "",
-      folderPath = "",
-      label = selectedSpecies
-    ) {
-      console.log("date:", date);
-      console.log("folderPath: ", folderPath);
-      console.log("label: ", selectedSpecies);
-      console.log("##################");
+    async function getAllImages(files = [], date = '', folderPath = '', label = selectedSpecies) {
+      console.log('date:', date)
+      console.log('folderPath: ', folderPath)
+      console.log('label: ', selectedSpecies)
+      console.log('##################')
       try {
-        const response = await apiClient(
-          `/api/users/detect_images/browse?date=${date}&folderPath=${folderPath}${
-            label ? `&label=${label}` : ""
-          }&confLow=${confLow}&confHigh=${confHigh}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await window.api.browseDetectImage(
+          date,
+          folderPath,
+          label,
+          parseFloat(confLow),
+          parseFloat(confHigh)
+        )
 
         if (!response.ok) {
-          console.error(response.status);
+          console.error(response.error)
           dispatch(
             add_message({
               message:
-                "Something went wrong getting upload information. Please contact a developer for further assistance.",
-              status: bannerStatuses.error,
+                'Something went wrong getting upload information. Please contact a developer for further assistance.',
+              status: bannerStatuses.error
             })
-          );
-          return;
+          )
+          return
         }
 
-        const data = await response.json();
-        console.log(data);
-
-        for (const item of data.files) {
-          if (!item.isDirectory) continue;
+        for (const item of response.files) {
+          if (!item.isDirectory) continue
           files.push({
             ...item,
-            parent: `${date ? date + "/" : ""}${
-              folderPath ? folderPath + "/" : ""
-            }`,
-            path: `${date ? date + "/" : ""}${item.path}`,
-          });
-          console.log("Folders:", detects);
-          await getAllImages(
-            files,
-            date ? date : item.path,
-            date ? item.path : "",
-            label
-          );
+            parent: `${date ? date + '/' : ''}${folderPath ? folderPath + '/' : ''}`,
+            path: `${date ? date + '/' : ''}${item.path}`
+          })
+          console.log('Folders:', detects)
+          await getAllImages(files, date ? date : item.path, date ? item.path : '', label)
         }
 
-        if (date === "") {
-          console.log("Files: ");
-          setDetects(files);
+        if (date === '') {
+          console.log('Files: ')
+          setDetects(files)
         }
       } catch (err) {
-        console.error(err);
+        console.error(err)
         dispatch(
           add_message({
             message:
-              "Something went wrong getting upload information. Please contact a developer for further assistance.",
-            status: bannerStatuses.error,
+              'Something went wrong getting upload information. Please contact a developer for further assistance.',
+            status: bannerStatuses.error
           })
-        );
+        )
       }
     }
 
-    getAllImages();
+    getAllImages()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSpecies, confLow, confHigh]);
+  }, [selectedSpecies, confLow, confHigh])
 
   return (
     <div className="uploads-wrapper">
@@ -186,17 +150,15 @@ export default function Images() {
       <div id="LabelDropdown">
         <FilterConfidence
           title={
-            confLow !== "0" || confHigh !== "1"
+            confLow !== '0' || confHigh !== '1'
               ? `Filter by Confidence: ${confLow} - ${confHigh} ▼`
-              : "Filter by Confidence ▼"
+              : 'Filter by Confidence ▼'
           }
           onValueChange={handleConfidenceChange}
         />
         <FilterDropdown
           title={
-            selectedSpecies
-              ? `Filter by Species: ${selectedSpecies} ▼`
-              : "Filter by Species ▼"
+            selectedSpecies ? `Filter by Species: ${selectedSpecies} ▼` : 'Filter by Species ▼'
           }
           content={labels}
           onItemSelect={handleSpeciesSelect}
@@ -204,24 +166,20 @@ export default function Images() {
         <div
           className="clear-filter-button"
           onClick={() => {
-            setSpecies(null);
-            setConfLow("0");
-            setConfHigh("1");
+            setSpecies(null)
+            setConfLow('0')
+            setConfHigh('1')
           }}
         >
           Clear Filter
         </div>
         {/* Download button with loading state */}
-        <div
-          className="download-button"
-          onClick={handleDownload}
-          disabled={isLoading}
-        >
+        <div className="download-button" onClick={handleDownload} disabled={isLoading}>
           {isLoading
-            ? "Exporting..."
+            ? 'Exporting...'
             : selectedSpecies
-            ? `Export All ${selectedSpecies}`
-            : `Export All Images`}
+              ? `Export All ${selectedSpecies}`
+              : `Export All Images`}
         </div>
       </div>
 
@@ -235,10 +193,8 @@ export default function Images() {
           />
         </div>
       ) : (
-        <div className="uploads-list uploads-list--empty">
-          No detect images found
-        </div>
+        <div className="uploads-list uploads-list--empty">No detect images found</div>
       )}
     </div>
-  );
+  )
 }

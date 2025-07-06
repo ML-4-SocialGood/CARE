@@ -1,35 +1,25 @@
-import { useState } from "react";
-import closeIcon from "../../../assets/close.png";
-import { Button } from "../../../components/Button.jsx";
-import { Heading } from "../../../components/Heading.jsx";
-import TreeItem from "../../../components/TreeItem.jsx";
-import TreeView from "../../../components/TreeView.jsx";
-import apiClient from "../../../utils/apiClient.js";
+import { useState } from 'react'
+import closeIcon from '../../../assets/close.png'
+import { Button } from '../../../components/Button.jsx'
+import { Heading } from '../../../components/Heading.jsx'
+import TreeItem from '../../../components/TreeItem.jsx'
+import TreeView from '../../../components/TreeView.jsx'
+import apiClient from '../../../utils/apiClient.js'
 
 export default function ResultView({ folders, files }) {
-  const [currentFolder, setCurrentFolder] = useState('');
-  const [selected, setSelected] = useState(new Set());
-  const [preview, setPreview] = useState(null);
+  const [currentFolder, setCurrentFolder] = useState('')
+  const [selected, setSelected] = useState(new Set())
+  const [preview, setPreview] = useState(null)
 
   const handlePreview = async (file) => {
-    const [date, ...paths] = file.path.split("/");
-
-    const response = await apiClient(
-      `/api/users/detect_images/view?date=${date}&imagePath=${paths.join("/")}`,
-      {
-        method: "GET",
-        // headers: {
-        //   "Content-Type": "image/jpeg",
-        // },
-      }
-    );
-
-    const data = await response.blob();
+    const [date, ...paths] = file.path.split('/')
+    const response = await window.api.viewDetectImage(date, paths.join('/'))
+    const blob = new Blob([response.data], { type: 'application/octet-stream' })
     setPreview({
       name: file.name,
-      src: URL.createObjectURL(data),
-    });
-  };
+      src: URL.createObjectURL(blob)
+    })
+  }
 
   return (
     <div className="uploads-view">
@@ -57,43 +47,32 @@ export default function ResultView({ folders, files }) {
             <Button
               className="uploads-preview__close-button"
               onClick={() => {
-                setPreview(null);
+                setPreview(null)
               }}
             >
-              <img
-                alt="Close preview"
-                className="uploads-preview__close-icon"
-                src={closeIcon}
-              />
+              <img alt="Close preview" className="uploads-preview__close-icon" src={closeIcon} />
             </Button>
           </div>
           <img src={preview.src} className="primary-preview" />
         </div>
       )}
     </div>
-  );
+  )
 }
 
-function TreeList({ folders, parent = "" }) {
-  const list = folders.filter(
-    (item) => item.parent === (parent === "" ? parent : parent + "/")
-  );
+function TreeList({ folders, parent = '' }) {
+  const list = folders.filter((item) => item.parent === (parent === '' ? parent : parent + '/'))
 
   return list.map((item) => (
     <TreeItem key={item.path} itemId={item.path} label={item.name}>
-      {folders.find((subItem) => subItem.parent === item.path + "/") && (
+      {folders.find((subItem) => subItem.parent === item.path + '/') && (
         <TreeList folders={folders} parent={item.path} />
       )}
     </TreeItem>
-  ));
+  ))
 }
 
-function FileList({
-  files,
-  selected,
-  setSelected,
-  handlePreview,
-}) {
+function FileList({ files, selected, setSelected, handlePreview }) {
   if (files.length) {
     return (
       <div className="uploads">
@@ -108,36 +87,33 @@ function FileList({
                 checked={files.every((file) => selected.has(file.path))}
                 onChange={() => {
                   setSelected(() => {
-                    const newSelected = new Set(selected);
+                    const newSelected = new Set(selected)
                     if (files.every((file) => newSelected.has(file.path))) {
-                      files.forEach((file) => newSelected.delete(file.path));
+                      files.forEach((file) => newSelected.delete(file.path))
                     } else {
-                      files.forEach((file) => newSelected.add(file.path));
+                      files.forEach((file) => newSelected.add(file.path))
                     }
-                    return newSelected;
-                  });
+                    return newSelected
+                  })
                 }}
               />
               <div className="uploads__list__item__fileinfo">Select All</div>
             </li>
             {files.map((file, index) => (
-              <li
-                className="uploads__list__item"
-                key={`${file.name}-${index}}`}
-              >
+              <li className="uploads__list__item" key={`${file.name}-${index}}`}>
                 <input
                   type="checkbox"
                   checked={selected.has(file.path)}
                   onChange={(event) => {
                     setSelected((selected) => {
-                      const newSelected = new Set(selected);
+                      const newSelected = new Set(selected)
                       if (event.target.checked) {
-                        newSelected.add(file.path);
+                        newSelected.add(file.path)
                       } else {
-                        newSelected.delete(file.path);
+                        newSelected.delete(file.path)
                       }
-                      return newSelected;
-                    });
+                      return newSelected
+                    })
                   }}
                 />
                 <div className="uploads__list__item__fileinfo">
@@ -146,10 +122,7 @@ function FileList({
                   src={file.src}
                   onClick={() => setPreview(file)}
                 /> */}
-                  <span
-                    className="file-name"
-                    onClick={() => handlePreview(file)}
-                  >
+                  <span className="file-name" onClick={() => handlePreview(file)}>
                     {file.name}
                   </span>
                 </div>
@@ -158,8 +131,8 @@ function FileList({
           </ul>
         </div>
       </div>
-    );
+    )
   } else {
-    return null;
+    return null
   }
 }

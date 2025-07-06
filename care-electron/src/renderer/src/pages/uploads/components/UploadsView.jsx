@@ -91,43 +91,25 @@ export default function UploadsView({ uploads }) {
 
   const handleAnalyse = async () => {
     if (status) return
-
+    const streamListener = (_, text) => {
+      const lines = new TextDecoder().decode(text).split('\n')
+      for (const line of lines) {
+        if (/PROCESS: (\d+)\/(\d+)/.test(line)) {
+          setCompleted(+RegExp.$1)
+          setTotal(+RegExp.$2)
+        }
+      }
+    }
     try {
       setStatus(statuses.processing)
-
-      const response = await apiClient('/api/users/images/detect', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          selectedPaths: Array.from(selected)
-        })
-      })
-
+      window.api.addStreamListener(streamListener)
+      const selectedPaths = Array.from(selected)
+      const response = await window.api.detect(selectedPaths)
       if (!response.ok) {
         setStatus('')
-        const body = await response.json()
-        throw new Error(body.error)
+        throw new Error('detection failed: ' + response.error)
       }
-
-      const reader = response.body.getReader()
-      let done, value
-      while (!done) {
-        ;({ value, done } = await reader.read())
-        if (done) {
-          setTimeout(() => navigate('/images'), 1000)
-          break
-        }
-        const text = new TextDecoder().decode(value)
-        const lines = text.split('\n')
-        for (const line of lines) {
-          if (/PROCESS: (\d+)\/(\d+)/.test(line)) {
-            setCompleted(+RegExp.$1)
-            setTotal(+RegExp.$2)
-          }
-        }
-      }
+      setTimeout(() => navigate('/images'), 1000)
     } catch (err) {
       setStatus('')
       console.error(err)
@@ -137,11 +119,13 @@ export default function UploadsView({ uploads }) {
           status: bannerStatuses.error
         })
       )
+    } finally {
+      window.api.addStreamListener(streamListener)
     }
   }
 
   const handleSelectAll = async () => {
-    const response = window.api.getImagePaths(currentFolder)
+    const response = await window.api.getImagePaths(currentFolder)
     if (response.ok) {
       const newSelected = new Set(selected)
       response.selectAllPaths.forEach((item) => {
@@ -152,7 +136,7 @@ export default function UploadsView({ uploads }) {
   }
 
   const handleDeselectAll = async () => {
-    const response = window.api.getImagePaths(currentFolder)
+    const response = await window.api.getImagePaths(currentFolder)
     if (response.ok) {
       const newSelected = new Set(selected)
       response.selectAllPaths.forEach((item) => {
@@ -164,7 +148,7 @@ export default function UploadsView({ uploads }) {
 
   async function selectInputs() {
     // get all paths with current folder
-    const response = window.api.getImagePaths(currentFolder)
+    const response = await window.api.getImagePaths(currentFolder)
     // check if all paths are in current selections
     if (response.ok) {
       if (response.selectAllPaths.every((file) => selected.has(file.replaceAll('\\', '/')))) {

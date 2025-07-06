@@ -248,6 +248,73 @@ async function downloadZip(baseDir: string, selectedPaths: string[]) {
   return { ok: true, data: data }
 }
 
+export async function downloadReidImages(date: string, time: string) {
+  try {
+    // Note: This sorts the images into folder by group ID. So we can't just
+    // use downloadZip here.
+    const userIdFolder = '1'
+    const baseDir = path.join(userProfileDir, 'data/image_reid_output', userIdFolder)
+    const baseImgDir = path.join(userProfileDir, 'data/image_marked', userIdFolder)
+    let targetDir: string
+
+    const timeJson = time + '.json'
+    let relDir = path.join(date, timeJson)
+    targetDir = path.resolve(baseDir, relDir)
+
+    // Ensure the resolved path is still within the baseDir
+    if (!targetDir.startsWith(baseDir)) {
+      return { ok: false, error: 'Invalid folder path.' }
+    }
+
+    // Check if the directory exists before reading it
+    if (!(await fs.pathExists(targetDir))) {
+      return { ok: false, error: 'Directory not found.' }
+    }
+
+    // Ensure the base directory exists
+    fs.ensureDirSync(baseDir)
+    const archivePath = userProfileDir + '/images.zip'
+    const output = fs.createWriteStream(archivePath)
+
+    const archive = archiver('zip', {
+      zlib: { level: 0 } // Sets the compression level
+    })
+
+    // Pipe archive data to the response
+    archive.pipe(output)
+
+    // Read and parse the JSON file
+    const fileStructure = JSON.parse(fs.readFileSync(targetDir, 'utf-8'))
+
+    // Iterate through the folder (key) and files (value) in the JSON structure
+    for (const [folder, files] of Object.entries(fileStructure)) {
+      for (const filePath of files) {
+        const fullPath = path.resolve(baseImgDir, filePath) // Resolve the full path
+        try {
+          // Check if file exists using fs-extra
+          await fs.access(fullPath)
+          const fileName = path.basename(filePath) // Extract file name
+          archive.file(fullPath, { name: path.join(folder, fileName) }) // Add file under the respective folder in the archive
+        } catch (err) {
+          console.warn(`File not found: ${fullPath}`) // Log missing files
+        }
+      }
+    }
+
+    // Finalize the archive (i.e., finish the zipping process)
+    await archive.finalize()
+    await new Promise((resolve, _) => {
+      output.close(resolve)
+    })
+
+    const data = await fs.readFile(archivePath)
+    return { ok: true, data: data }
+  } catch (error) {
+    console.log(error)
+    return { ok: false, error: 'downloadReidImages: ' + error }
+  }
+}
+
 export async function downloadSelectedGalleryImages(selectedPaths: string[]) {
   try {
     const userIdFolder = '1'
@@ -692,5 +759,168 @@ export async function runReid(selectedPaths: string[], stream: (txt: string) => 
     return { ok: false, error: 'runReid failed: ' + error }
   } finally {
     await fs.remove(tempImagePath)
+  }
+}
+
+// Function to read the JSON file and extract keys
+const extractKeysFromJson = async (filePath) => {
+  try {
+    // Read the JSON file
+    const data = fs.readFileSync(filePath, 'utf8')
+    const jsonObject = JSON.parse(data)
+
+    // Extract keys into a list
+    return Object.keys(jsonObject)
+  } catch (error) {
+    console.error('Error reading or parsing JSON file:', error)
+    return []
+  }
+}
+
+// Function to read the JSON file and extract values for a specific key
+const extractValuesForKey = async (filePath, key) => {
+  try {
+    // Read the JSON file
+    const data = fs.readFileSync(filePath, 'utf8')
+    const jsonObject = JSON.parse(data)
+
+    // Extract values for the specified key
+    const values = jsonObject[key]
+
+    // Check if values exist and return them, or return an empty array
+    return Array.isArray(values) ? values : []
+  } catch (error) {
+    console.error('Error reading or parsing JSON file:', error)
+    return []
+  }
+}
+
+export async function browseReidImage(date: string, time: string, group_id: string) {
+  try {
+    const userIdFolder = '1'
+    const baseDir = path.join(userProfileDir, 'data/image_reid_output', userIdFolder)
+    let targetDir: string, browseMode: string
+
+    if (!date) {
+      browseMode = 'root'
+      targetDir = path.resolve(baseDir) // Resolve the full path
+      fs.ensureDirSync(targetDir)
+    } else if (!time) {
+      browseMode = 'date'
+      targetDir = path.resolve(baseDir, date) // Resolve the full path
+    } else if (!group_id) {
+      browseMode = 'time'
+      const timeJson = time + '.json'
+      let relDir = path.join(date, timeJson)
+      targetDir = path.resolve(baseDir, relDir) // Resolve the full path
+    } else {
+      browseMode = 'group_id'
+      const timeJson = time + '.json'
+      let relDir = path.join(date, timeJson)
+      targetDir = path.resolve(baseDir, relDir) // Resolve the full path
+    }
+
+    // Ensure the resolved path is still within the baseDir
+    if (!targetDir.startsWith(baseDir)) {
+      return { ok: false, error: 'Invalid folder path.' }
+    }
+
+    // Check if the directory exists before reading it
+    if (!(await fs.pathExists(targetDir))) {
+      // console.log("browseMode: " + browseMode);
+      return { ok: false, error: 'Directory not found.' }
+    }
+
+    if (browseMode === 'root') {
+      const stat = fs.statSync(targetDir)
+      if (stat.isFile()) {
+        return { ok: false, error: 'Path is a file, not a directory.' }
+      }
+
+      const files = await fs.readdir(targetDir)
+      const fileDetails = await Promise.all(
+        files.map(async (file) => {
+          const filePath = path.join(targetDir, file)
+          const stat = await fs.stat(filePath)
+          return {
+            name: file,
+            isDirectory: stat.isDirectory(),
+            path: path.join(file),
+            date: file,
+            time: null,
+            group_id: null,
+            realDate: null,
+            realPath: null
+          }
+        })
+      )
+
+      return { ok: true, files: fileDetails }
+    } else if (browseMode === 'date') {
+      const stat = fs.statSync(targetDir)
+      if (stat.isFile()) {
+        return { ok: false, error: 'Path is a file, not a directory.' }
+      }
+
+      const files = await fs.readdir(targetDir)
+      const fileDetails = await Promise.all(
+        files.map(async (file) => {
+          const filePath = path.join(targetDir, file)
+          const basename = path.basename(filePath)
+          const fileName = path.parse(basename).name // Remove the extension
+          return {
+            name: fileName,
+            isDirectory: true,
+            path: path.join(date, fileName),
+            date: date,
+            time: fileName,
+            group_id: null,
+            realDate: null,
+            realPath: null
+          }
+        })
+      )
+
+      return { ok: true, files: fileDetails }
+    } else if (browseMode === 'time') {
+      const ids = await extractKeysFromJson(targetDir)
+      // console.log(ids);
+      return {
+        ok: true,
+        files: ids.map((key) => ({
+          name: key,
+          isDirectory: true,
+          path: path.join(date, time, key),
+          date: date,
+          time: time,
+          group_id: key,
+          realDate: null,
+          realPath: null
+        }))
+      }
+    } else if (browseMode === 'group_id') {
+      // Extract values
+      const imagePaths = await extractValuesForKey(targetDir, group_id)
+      // Extract filenames from the paths
+      // const imageNames = imagePaths.map(imagePath => path.basename(imagePath));
+      return {
+        ok: true,
+        files: imagePaths.map((key) => ({
+          name: path.basename(key),
+          isDirectory: false,
+          path: path.join(date, time, group_id, path.basename(key)),
+          date: date,
+          time: time,
+          group_id: group_id,
+          realDate: key.split(path.sep)[0],
+          realPath: key.split(path.sep).slice(1).join(path.sep)
+        }))
+      }
+    } else {
+      return { ok: false, error: 'browseReidImage: Internal error related to browseMode.' }
+    }
+  } catch (error) {
+    console.log(error)
+    return { ok: false, error: 'browseReidImage: ' + error }
   }
 }

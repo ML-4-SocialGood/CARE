@@ -5,9 +5,11 @@ import icon from '../../resources/icon.png?asset'
 import {
   browseDetectImage,
   browseImage,
+  browseReidImage,
   detect,
   downloadSelectedGalleryImages,
   downloadDetectImages,
+  downloadReidImages,
   downloadSelectedDetectImages,
   getDetectImagePaths,
   getImagePaths,
@@ -93,6 +95,10 @@ app.whenReady().then(() => {
     downloadSelectedDetectImages(selectPaths)
   )
   ipcMain.handle('runReid', (_, selectedPaths) => runReid(selectedPaths, stream))
+  ipcMain.handle('browseReidImage', (_, date, time, group_id) =>
+    browseReidImage(date, time, group_id)
+  )
+  ipcMain.handle('downloadReidImages', (_, date, time) => downloadReidImages(date, time))
 
   createWindow()
 

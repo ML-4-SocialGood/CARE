@@ -11,6 +11,7 @@ import {
   downloadSelectedDetectImages,
   getDetectImagePaths,
   getImagePaths,
+  runReid,
   uploadImage,
   viewDetectImage,
   viewImage
@@ -91,6 +92,7 @@ app.whenReady().then(() => {
   ipcMain.handle('downloadSelectedDetectImages', (_, selectPaths) =>
     downloadSelectedDetectImages(selectPaths)
   )
+  ipcMain.handle('runReid', (_, selectedPaths) => runReid(selectedPaths, stream))
 
   createWindow()
 

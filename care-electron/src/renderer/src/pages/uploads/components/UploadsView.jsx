@@ -120,7 +120,7 @@ export default function UploadsView({ uploads }) {
         })
       )
     } finally {
-      window.api.addStreamListener(streamListener)
+      window.api.removeStreamListener(streamListener)
     }
   }
 

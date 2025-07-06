@@ -25,14 +25,13 @@ const api = {
   ) => ipcRenderer.invoke('browseDetectImage', date, folderPath, filterLabel, confLow, confHigh),
   viewDetectImage: (date: string, imagePath: string) =>
     ipcRenderer.invoke('viewDetectImage', date, imagePath),
-
   getDetectImagePaths: (dirPath: string, filterLabel: string, confLow: number, confHigh: number) =>
     ipcRenderer.invoke('getDetectImagePaths', dirPath, filterLabel, confLow, confHigh),
-
   downloadDetectImages: (filterLabel: string) =>
     ipcRenderer.invoke('downloadDetectImages', filterLabel),
   downloadSelectedDetectImages: (selectPaths: string[]) =>
-    ipcRenderer.invoke('downloadSelectedDetectImages', selectPaths)
+    ipcRenderer.invoke('downloadSelectedDetectImages', selectPaths),
+  runReid: (selectPaths: string[]) => ipcRenderer.invoke('runReid', selectPaths)
 }
 
 if (process.contextIsolated) {

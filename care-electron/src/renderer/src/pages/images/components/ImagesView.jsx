@@ -1,330 +1,273 @@
-import { useEffect, useState, useRef, useMemo } from "react";
-import ReactPaginate from "react-paginate";
-import { createPortal } from "react-dom";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { add_message, bannerStatuses } from "../../../utils/bannerSlice";
-import closeIcon from "../../../assets/close.png";
-import { Button } from "../../../components/Button";
-import { Heading } from "../../../components/Heading";
-import Modal from "../../../components/Modal";
-import TreeItem from "../../../components/TreeItem";
-import TreeView from "../../../components/TreeView";
-import apiClient from "../../../utils/apiClient";
-import downloadIcon from "../../../assets/icon-reid-download.svg";
-import downloadIconOnclick from "../../../assets/icon-reid-download_onclick.svg";
-import classNames from "classnames";
+import { useEffect, useState, useRef, useMemo } from 'react'
+import ReactPaginate from 'react-paginate'
+import { createPortal } from 'react-dom'
+import { useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import { add_message, bannerStatuses } from '../../../utils/bannerSlice'
+import closeIcon from '../../../assets/close.png'
+import { Button } from '../../../components/Button'
+import { Heading } from '../../../components/Heading'
+import Modal from '../../../components/Modal'
+import TreeItem from '../../../components/TreeItem'
+import TreeView from '../../../components/TreeView'
+import apiClient from '../../../utils/apiClient'
+import downloadIcon from '../../../assets/icon-reid-download.svg'
+import downloadIconOnclick from '../../../assets/icon-reid-download_onclick.svg'
+import classNames from 'classnames'
 
 export default function ImagesView({ detects, label, confLow, confHigh }) {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
 
-  const [files, setFiles] = useState([]);
-  const [currentFolder, setCurrentFolder] = useState("");
+  const [files, setFiles] = useState([])
+  const [currentFolder, setCurrentFolder] = useState('')
   const currentFiles = useMemo(
     () => files.filter((item) => item.parent === currentFolder),
     [files, currentFolder]
-  );
-  const [selected, setSelected] = useState(new Set());
-  const [preview, setPreview] = useState(null);
+  )
+  const [selected, setSelected] = useState(new Set())
+  const [preview, setPreview] = useState(null)
 
-  const [status, setStatus] = useState("");
-  const [completed, setCompleted] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [status, setStatus] = useState('')
+  const [completed, setCompleted] = useState(0)
+  const [total, setTotal] = useState(0)
 
-  const itemsPerPage = 10;
-  const [currentPage, setCurrentPage] = useState(0);
-  const pageCount = Math.ceil(files.length / itemsPerPage);
+  const itemsPerPage = 10
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageCount = Math.ceil(files.length / itemsPerPage)
 
-  const [inputPage, setInputPage] = useState("1");
+  const [inputPage, setInputPage] = useState('1')
 
-  const currentItems = files.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  const currentItems = files.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
 
   const changePage = ({ selected }) => {
-    setCurrentPage(selected);
-    setInputPage((selected + 1).toString());
-    handlePreview(files[selected * itemsPerPage], files);
-  };
+    setCurrentPage(selected)
+    setInputPage((selected + 1).toString())
+    handlePreview(files[selected * itemsPerPage], files)
+  }
 
   useEffect(() => {
-    if (!currentFolder) return;
+    if (!currentFolder) return
 
     const fetchFiles = async () => {
-      setFiles([]);
+      setFiles([])
 
-      console.log(label);
-
-      const [date, ...paths] = currentFolder.split("/");
-      const response = await apiClient(
-        `/api/users/detect_images/browse?date=${date}&folderPath=${paths.join(
-          "/"
-        )}${
-          label ? `&label=${label}` : ""
-        }&confLow=${confLow}&confHigh=${confHigh}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const data = await response.json();
-      const files = data.files
+      const [date, ...paths] = currentFolder.split('/')
+      const folderPath = paths.join('/')
+      const response = await window.api.browseDetectImage(
+        date,
+        folderPath,
+        label,
+        parseFloat(confLow),
+        parseFloat(confHigh)
+      )
+      if (!response.ok) {
+        setPreview(null)
+        return
+      }
+      const files = response.files
         .filter((item) => !item.isDirectory)
         .map((item) => ({
           ...item,
           parent: currentFolder,
-          path: `${date}/${item.path.replaceAll("\\", "/")}`,
-        }));
+          path: `${date}/${item.path.replaceAll('\\', '/')}`
+        }))
 
-      setFiles(files);
+      setFiles(files)
 
       if (files.length != 0) {
-        handlePreview(files[0], files);
+        handlePreview(files[0], files)
       } else {
-        setPreview(null);
+        setPreview(null)
       }
-    };
+    }
 
-    fetchFiles();
-  }, [currentFolder, label, confLow, confHigh]);
+    fetchFiles()
+  }, [currentFolder, label, confLow, confHigh])
 
   const handlePreview = async (file, files) => {
-    const [date, ...paths] = file.path.split("/");
-
-    const response = await apiClient(
-      `/api/users/detect_images/view?date=${date}&imagePath=${paths.join("/")}`,
-      {
-        method: "GET",
-      }
-    );
-
-    const data = await response.blob();
-    await setPreview({
+    const [date, ...paths] = file.path.split('/')
+    const response = await window.api.viewDetectImage(date, paths.join('/'))
+    const blob = new Blob([response.data], { type: 'application/octet-stream' })
+    setPreview({
       path: file.path,
       name: file.name,
-      src: URL.createObjectURL(data),
-      index: files.indexOf(file),
-    });
-  };
+      src: URL.createObjectURL(blob),
+      index: files.indexOf(file)
+    })
+  }
 
   const handleAnalyse = async () => {
-    if (status) return;
+    if (status) return
 
     try {
-      setStatus(statuses.processing);
+      setStatus(statuses.processing)
 
-      const response = await apiClient("/api/users/detect_images/reid", {
-        method: "POST",
+      const response = await apiClient('/api/users/detect_images/reid', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          selectedPaths: Array.from(selected),
-        }),
-      });
+          selectedPaths: Array.from(selected)
+        })
+      })
 
       if (!response.ok) {
-        setStatus("");
-        const body = await response.json();
-        throw new Error(body.error);
+        setStatus('')
+        const body = await response.json()
+        throw new Error(body.error)
       }
 
-      const reader = response.body.getReader();
-      let done, value;
+      const reader = response.body.getReader()
+      let done, value
       while (!done) {
-        ({ value, done } = await reader.read());
+        ;({ value, done } = await reader.read())
         if (done) {
-          setTimeout(() => navigate("/reid"), 1000);
-          break;
+          setTimeout(() => navigate('/reid'), 1000)
+          break
         }
-        const text = new TextDecoder().decode(value);
-        const lines = text.split("\n");
+        const text = new TextDecoder().decode(value)
+        const lines = text.split('\n')
         for (const line of lines) {
           if (/PROCESS: (\d+)\/(\d+)/.test(line)) {
-            setCompleted(+RegExp.$1);
-            setTotal(+RegExp.$2);
+            setCompleted(+RegExp.$1)
+            setTotal(+RegExp.$2)
           }
         }
       }
     } catch (err) {
-      setStatus("");
-      console.error(err);
+      setStatus('')
+      console.error(err)
       dispatch(
         add_message({
           message: `${err}`,
-          status: bannerStatuses.error,
+          status: bannerStatuses.error
         })
-      );
+      )
     }
-  };
+  }
 
   const handleSelectAll = async () => {
-    const response = await apiClient(
-      `/api/users/detect_images/select_all?path=${currentFolder}${
-        label ? `&label=${label}` : ""
-      }&confLow=${confLow}&confHigh=${confHigh}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
+    const response = await window.api.getDetectImagePaths(
+      currentFolder,
+      label,
+      parseFloat(confLow),
+      parseFloat(confHigh)
+    )
     if (response.ok) {
-      const data = await response.json();
-      const newSelected = new Set(selected);
-      data.selectAllPaths.forEach((item) => {
-        newSelected.add(item.replaceAll("\\", "/"));
-      });
-      setSelected(newSelected);
+      const newSelected = new Set(selected)
+      response.selectAllPaths.forEach((item) => {
+        newSelected.add(item.replaceAll('\\', '/'))
+      })
+      setSelected(newSelected)
     }
-  };
+  }
 
   const handleDeselectAll = async () => {
-    const response = await apiClient(
-      `/api/users/detect_images/select_all?path=${currentFolder}${
-        label ? `&label=${label}` : ""
-      }&confLow=${confLow}&confHigh=${confHigh}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
+    const response = await window.api.getDetectImagePaths(
+      currentFolder,
+      label,
+      parseFloat(confLow),
+      parseFloat(confHigh)
+    )
     if (response.ok) {
-      const data = await response.json();
-      const newSelected = new Set(selected);
-      data.selectAllPaths.forEach((item) => {
-        newSelected.delete(item.replaceAll("\\", "/"));
-      });
-      setSelected(newSelected);
+      const newSelected = new Set(selected)
+      response.selectAllPaths.forEach((item) => {
+        newSelected.delete(item.replaceAll('\\', '/'))
+      })
+      setSelected(newSelected)
     }
-  };
+  }
 
   async function selectInputs() {
     // get all paths with current folder
-    const response = await apiClient(
-      `/api/users/detect_images/select_all?path=${currentFolder}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
+    const response = await window.api.getDetectImagePaths(
+      currentFolder,
+      label,
+      parseFloat(confLow),
+      parseFloat(confHigh)
+    )
     // check if all paths are in current selections
     if (response.ok) {
-      const data = await response.json();
-      if (
-        data.selectAllPaths.every((file) =>
-          selected.has(file.replaceAll("\\", "/"))
-        )
-      ) {
-        return true;
+      if (response.selectAllPaths.every((file) => selected.has(file.replaceAll('\\', '/')))) {
+        return true
       } else {
-        return false;
+        return false
       }
     }
   }
 
   const onDownload = async (file) => {
-    const [date, ...paths] = file.path.split("/");
+    const [date, ...paths] = file.path.split('/')
 
     try {
-      const response = await apiClient(
-        `/api/users/detect_images/view?date=${date}&imagePath=${paths.join(
-          "/"
-        )}`,
-        {
-          method: "GET",
-        }
-      );
-
+      const response = await window.api.viewDetectImage(date, paths.join('/'))
+      const blob = new Blob([response.data], { type: 'application/octet-stream' })
+      setPreview({
+        path: file.path,
+        name: file.name,
+        src: URL.createObjectURL(blob),
+        index: files.indexOf(file)
+      })
       if (!response.ok) {
-        const body = await response.json();
-        throw new Error(body.error);
+        throw new Error(response.error)
       }
-
-      const filename = `${file.name}`;
-
-      console.log(response);
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
+      const filename = `${file.name}`
+      const url = window.URL.createObjectURL(new Blob([blob]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', filename)
+      document.body.appendChild(link)
+      link.click()
+      link.parentNode.removeChild(link)
     } catch (error) {
-      console.error("Failed to download result:", error);
-      setNotificationMessage(
-        "Failed to download the result. Please try again."
-      );
-      setShowNotificationModal(true);
+      console.error('Failed to download result:', error)
+      setNotificationMessage('Failed to download the result. Please try again.')
+      setShowNotificationModal(true)
     }
-  };
+  }
 
   const handleDownload = async () => {
     try {
-      const response = await apiClient(
-        "/api/users/detect_images/download_selected",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            selectedPaths: Array.from(selected),
-          }),
-        }
-      );
+      const selectedPaths = Array.from(selected)
+      const response = await window.api.downloadSelectedDetectImages(selectedPaths)
 
       if (!response.ok) {
-        const body = await response.json();
-        throw new Error(body.error);
+        throw new Error(response.error)
       }
 
       // Generate timestamp-based zip filename using current timezone in YYYYMMDD_HHMMSS format
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are 0-based
-      const day = String(now.getDate()).padStart(2, "0");
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const seconds = String(now.getSeconds()).padStart(2, "0");
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0') // Months are 0-based
+      const day = String(now.getDate()).padStart(2, '0')
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      const seconds = String(now.getSeconds()).padStart(2, '0')
 
-      const localTimestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-      const filename = `detection_download_${localTimestamp}.zip`;
+      const localTimestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`
+      const filename = `detection_download_${localTimestamp}.zip`
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
+      const blob = new Blob([response.data], { type: 'application/octet-stream' })
+
+      const url = window.URL.createObjectURL(new Blob([blob]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', filename)
+      document.body.appendChild(link)
+      link.click()
+      link.parentNode.removeChild(link)
     } catch (err) {
-      console.error(err);
+      console.error(err)
       dispatch(
         add_message({
           message: `${err}`,
-          status: bannerStatuses.error,
+          status: bannerStatuses.error
         })
-      );
+      )
     }
-  };
+  }
 
   return (
     <div className="uploads-view">
@@ -332,8 +275,8 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
         <div className="uploads-folder-container">
           <TreeView
             onSelectedChange={(itemId) => {
-              setCurrentFolder(itemId);
-              setPreview(null);
+              setCurrentFolder(itemId)
+              setPreview(null)
             }}
           >
             <TreeList folders={detects}></TreeList>
@@ -366,8 +309,8 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
           />
         ) : (
           <div className="uploads-file-list-warning">
-            You can check your detected images here. <br></br>Please select a
-            folder from the folder tree. <br></br>Please select a species via the Species Filter before running ReID. 
+            You can check your detected images here. <br></br>Please select a folder from the folder
+            tree. <br></br>Please select a species via the Species Filter before running ReID.
           </div>
         )}
       </div>
@@ -396,8 +339,8 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
             <Modal
               className="uploader-modal"
               onCloseClick={() => {
-                setStatus(""); // Clear the status first
-                terminateAIAndRefresh();
+                setStatus('') // Clear the status first
+                terminateAIAndRefresh()
               }}
             >
               {generateModalContent(status, completed, total)}
@@ -407,44 +350,42 @@ export default function ImagesView({ detects, label, confLow, confHigh }) {
           document.body
         )}
     </div>
-  );
+  )
 }
 
 const terminateAIAndRefresh = async () => {
   try {
     const response = await apiClient(`/api/users/terminate_ai`, {
-      method: "GET",
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json",
-      },
-    });
+        'Content-Type': 'application/json'
+      }
+    })
 
     if (!response.ok) {
-      throw new Error("(Terminate) AI server error, please contact support.");
+      throw new Error('(Terminate) AI server error, please contact support.')
     }
 
-    const data = await response.json();
+    const data = await response.json()
     // console.log(data);
 
     // Once the API call is successful, refresh the page
-    window.location.reload();
+    window.location.reload()
   } catch (error) {
-    console.error("Error during AI termination:", error);
+    console.error('Error during AI termination:', error)
   }
-};
+}
 
-function TreeList({ folders, parent = "" }) {
-  const list = folders.filter(
-    (item) => item.parent === (parent === "" ? parent : parent + "/")
-  );
+function TreeList({ folders, parent = '' }) {
+  const list = folders.filter((item) => item.parent === (parent === '' ? parent : parent + '/'))
 
   return list.map((item) => (
     <TreeItem key={item.path} itemId={item.path} label={item.name}>
-      {folders.find((subItem) => subItem.parent === item.path + "/") && (
+      {folders.find((subItem) => subItem.parent === item.path + '/') && (
         <TreeList folders={folders} parent={item.path} />
       )}
     </TreeItem>
-  ));
+  ))
 }
 
 function PaginateItems({
@@ -467,65 +408,59 @@ function PaginateItems({
   setPreview,
   handleDownload,
   selectInputs,
-  label,
+  label
 }) {
-  const [allSelected, setAllSelected] = useState(null);
+  const [allSelected, setAllSelected] = useState(null)
 
   useEffect(() => {
     const getResult = async () => {
-      const result = await selectInputs();
-      setAllSelected(result);
-    };
+      const result = await selectInputs()
+      setAllSelected(result)
+    }
 
-    getResult();
-  });
+    getResult()
+  })
 
   const handleInputPageChange = () => {
-    const page = +inputPage;
+    const page = +inputPage
     if (Number.isNaN(page)) {
-      setInputPage("");
-      return;
+      setInputPage('')
+      return
     }
 
     if (page <= 0) {
-      setCurrentPage(0);
-      setInputPage("1");
+      setCurrentPage(0)
+      setInputPage('1')
     } else if (page > pageCount) {
-      setCurrentPage(pageCount - 1);
-      setInputPage(pageCount.toString());
+      setCurrentPage(pageCount - 1)
+      setInputPage(pageCount.toString())
     } else {
-      setCurrentPage(page - 1);
-      setInputPage(page.toString());
+      setCurrentPage(page - 1)
+      setInputPage(page.toString())
     }
 
-    handlePreview(files[(page - 1) * itemsPerPage], files);
-  };
+    handlePreview(files[(page - 1) * itemsPerPage], files)
+  }
 
   useEffect(() => {
-    setCurrentPage(0);
-    setInputPage("1");
-  }, [files]);
+    setCurrentPage(0)
+    setInputPage('1')
+  }, [files])
 
   if (currentItems.length === 0) {
     return (
       <>
         <div className="uploads__list__item uploads__list__item_title uploads__list__header">
           <div className="uploads__list__item__fileinfo">
-            {selected.size > 0 ? selected.size + " " : "No "}
+            {selected.size > 0 ? selected.size + ' ' : 'No '}
             files found
             <div className="heading-buttons-container">
               {allSelected ? (
-                <Button
-                  className="heading-buttons button-primary"
-                  onClick={handleDeselectAll}
-                >
+                <Button className="heading-buttons button-primary" onClick={handleDeselectAll}>
                   Deselect all with subfolders
                 </Button>
               ) : (
-                <Button
-                  className="heading-buttons button-primary"
-                  onClick={handleSelectAll}
-                >
+                <Button className="heading-buttons button-primary" onClick={handleSelectAll}>
                   Select all with subfolders
                 </Button>
               )}
@@ -538,9 +473,7 @@ function PaginateItems({
           disabled={selected.size === 0} // Disable if nothing is selected
         >
           Download Selected
-          {selected.size > 0 && (
-            <span className="upload-button-count">{selected.size}</span>
-          )}
+          {selected.size > 0 && <span className="upload-button-count">{selected.size}</span>}
         </Button>
         <Button
           className="analyse-button button-primary"
@@ -548,12 +481,10 @@ function PaginateItems({
           disabled={selected.size === 0 || label === null} // Disable if nothing selected
         >
           Run ReID
-          {selected.size > 0 && (
-            <span className="upload-button-count">{selected.size}</span>
-          )}
+          {selected.size > 0 && <span className="upload-button-count">{selected.size}</span>}
         </Button>
       </>
-    );
+    )
   }
 
   return (
@@ -572,9 +503,9 @@ function PaginateItems({
 
       <div className="pagination-controls">
         <ReactPaginate
-          previousLabel={"<"}
-          nextLabel={">"}
-          breakLabel={"..."}
+          previousLabel={'<'}
+          nextLabel={'>'}
+          breakLabel={'...'}
           forcePage={currentPage}
           pageCount={pageCount}
           pageRangeDisplayed={3}
@@ -594,8 +525,8 @@ function PaginateItems({
             value={inputPage}
             onChange={(event) => setInputPage(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                handleInputPageChange();
+              if (event.key === 'Enter') {
+                handleInputPageChange()
               }
             }}
           />
@@ -613,9 +544,7 @@ function PaginateItems({
         disabled={selected.size === 0} // Disable if nothing is selected
       >
         Download Selected
-        {selected.size > 0 && (
-          <span className="upload-button-count">{selected.size}</span>
-        )}
+        {selected.size > 0 && <span className="upload-button-count">{selected.size}</span>}
       </Button>
       {/* "Run Detection" button always visible */}
       <Button
@@ -624,12 +553,10 @@ function PaginateItems({
         disabled={selected.size === 0 || !label} // Disable if nothing selected
       >
         Run ReID
-        {selected.size > 0 && (
-          <span className="upload-button-count">{selected.size}</span>
-        )}
+        {selected.size > 0 && <span className="upload-button-count">{selected.size}</span>}
       </Button>
     </>
-  );
+  )
 }
 
 function Preview({
@@ -645,83 +572,75 @@ function Preview({
   setInputPage,
   selected,
   setSelected,
-  onDownload,
+  onDownload
 }) {
-  const curindex = preview.index;
-  const curindexmod = curindex % itemsPerPage;
-  const curPage = Math.floor(curindex / itemsPerPage) + 1;
+  const curindex = preview.index
+  const curindexmod = curindex % itemsPerPage
+  const curPage = Math.floor(curindex / itemsPerPage) + 1
 
   // Function to navigate to the previous file
   const handlePrev = () => {
-    setInputPage(curPage.toString());
+    setInputPage(curPage.toString())
 
     if (curPage != currentPage + 1) {
-      setCurrentPage(curPage - 1);
+      setCurrentPage(curPage - 1)
     }
 
-    if (files.length === 0) return;
+    if (files.length === 0) return
 
-    const prevIndex = curindex > 0 ? curindex - 1 : 0;
+    const prevIndex = curindex > 0 ? curindex - 1 : 0
 
     if (curindexmod == 0 && prevIndex != 0) {
-      setCurrentPage(currentPage - 1);
+      setCurrentPage(currentPage - 1)
     }
 
-    handlePreview(files[prevIndex], files);
-  };
+    handlePreview(files[prevIndex], files)
+  }
 
   // Function to navigate to the next file
   const handleNext = () => {
-    setInputPage(curPage.toString());
+    setInputPage(curPage.toString())
 
     if (curPage != currentPage + 1) {
-      setInputPage(curPage.toString());
-      setCurrentPage(curPage - 1);
+      setInputPage(curPage.toString())
+      setCurrentPage(curPage - 1)
     }
 
-    if (files.length === 0) return;
+    if (files.length === 0) return
 
-    const nextIndex =
-      curindex < files.length - 1 ? curindex + 1 : files.length - 1;
+    const nextIndex = curindex < files.length - 1 ? curindex + 1 : files.length - 1
 
     if (curindexmod == itemsPerPage - 1 && nextIndex != files.length - 1) {
-      setCurrentPage(currentPage + 1);
+      setCurrentPage(currentPage + 1)
     }
 
-    handlePreview(files[nextIndex], files);
-  };
+    handlePreview(files[nextIndex], files)
+  }
 
   const closePrev = () => {
-    setPreview(null);
-  };
+    setPreview(null)
+  }
 
   return (
     <div className="uploads-preview">
       <div className="uploads-preview__header">
-        <Button
-          className="uploads-preview__close-button button-primary"
-          onClick={closePrev}
-        >
-          <img
-            alt="Close preview"
-            className="uploads-preview__close-icon"
-            src={closeIcon}
-          />
+        <Button className="uploads-preview__close-button button-primary" onClick={closePrev}>
+          <img alt="Close preview" className="uploads-preview__close-icon" src={closeIcon} />
         </Button>
       </div>
       <div className="preview-header">
         <button
           className="download_button"
           onClick={(e) => {
-            e.stopPropagation();
-            onDownload(preview);
+            e.stopPropagation()
+            onDownload(preview)
           }}
         >
-          <img src={downloadIcon} alt="Download" className={"downloadIcon"} />
+          <img src={downloadIcon} alt="Download" className={'downloadIcon'} />
           <img
             src={downloadIconOnclick}
             alt="Download"
-            className={"downloadIcon downloadIconHover"}
+            className={'downloadIcon downloadIconHover'}
           />
         </button>
         <Heading level={2} className="uploads-preview__title">
@@ -736,14 +655,14 @@ function Preview({
           checked={selected.has(preview.path)}
           onChange={(event) => {
             setSelected((selected) => {
-              const newSelected = new Set(selected);
+              const newSelected = new Set(selected)
               if (event.target.checked) {
-                newSelected.add(preview.path);
+                newSelected.add(preview.path)
               } else {
-                newSelected.delete(preview.path);
+                newSelected.delete(preview.path)
               }
-              return newSelected;
-            });
+              return newSelected
+            })
           }}
         ></input>
         <div>
@@ -764,7 +683,7 @@ function Preview({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function FileItem({
@@ -776,47 +695,38 @@ function FileItem({
   handlePreview,
   handleSelectAll,
   handleDeselectAll,
-  allSelected,
+  allSelected
 }) {
-  const selectAllRef = useRef();
+  const selectAllRef = useRef()
 
   useEffect(() => {
     if (selectAllRef.current) {
-      const totalFiles = files.length;
-      const selectedFilesCount = files.filter((file) =>
-        selected.has(file.path)
-      ).length;
-      selectAllRef.current.indeterminate =
-        selectedFilesCount > 0 && selectedFilesCount < totalFiles;
+      const totalFiles = files.length
+      const selectedFilesCount = files.filter((file) => selected.has(file.path)).length
+      selectAllRef.current.indeterminate = selectedFilesCount > 0 && selectedFilesCount < totalFiles
     }
-  }, [files, selected]);
+  }, [files, selected])
 
   if (currentItems.length === 0) {
     return (
       <div className="uploads__list__item uploads__list__item_title uploads__list__header">
         <div className="uploads__list__item__fileinfo">
-          {selected.size > 0 ? selected.size + " " : "No "}
+          {selected.size > 0 ? selected.size + ' ' : 'No '}
           files found
           <div className="heading-buttons-container">
             {allSelected ? (
-              <Button
-                className="heading-buttons button-primary"
-                onClick={handleDeselectAll}
-              >
+              <Button className="heading-buttons button-primary" onClick={handleDeselectAll}>
                 Deselect all with subfolders
               </Button>
             ) : (
-              <Button
-                className="heading-buttons button-primary"
-                onClick={handleSelectAll}
-              >
+              <Button className="heading-buttons button-primary" onClick={handleSelectAll}>
                 Select all with subfolders
               </Button>
             )}
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -829,31 +739,25 @@ function FileItem({
             checked={files.every((file) => selected.has(file.path))}
             onChange={() => {
               setSelected((prevSelected) => {
-                const newSelected = new Set(prevSelected);
+                const newSelected = new Set(prevSelected)
                 if (files.every((file) => newSelected.has(file.path))) {
-                  files.forEach((file) => newSelected.delete(file.path));
+                  files.forEach((file) => newSelected.delete(file.path))
                 } else {
-                  files.forEach((file) => newSelected.add(file.path));
+                  files.forEach((file) => newSelected.add(file.path))
                 }
-                return newSelected;
-              });
+                return newSelected
+              })
             }}
           />
           <div className="uploads__list__item__fileinfo">
             Select All
             <div className="heading-buttons-container">
               {allSelected ? (
-                <Button
-                  className="heading-buttons button-primary"
-                  onClick={handleDeselectAll}
-                >
+                <Button className="heading-buttons button-primary" onClick={handleDeselectAll}>
                   Deselect all with subfolders
                 </Button>
               ) : (
-                <Button
-                  className="heading-buttons button-primary"
-                  onClick={handleSelectAll}
-                >
+                <Button className="heading-buttons button-primary" onClick={handleSelectAll}>
                   Select all with subfolders
                 </Button>
               )}
@@ -865,8 +769,8 @@ function FileItem({
         {currentItems.map((file, index) => (
           <li
             className={classNames(
-              "uploads__list__item uploads__list__subitem",
-              file.path === preview?.path && "file-name-selected"
+              'uploads__list__item uploads__list__subitem',
+              file.path === preview?.path && 'file-name-selected'
             )}
             key={`${file.name}-${index}`}
             onClick={() => handlePreview(file, files)}
@@ -876,14 +780,14 @@ function FileItem({
               checked={selected.has(file.path)}
               onChange={(event) => {
                 setSelected((selected) => {
-                  const newSelected = new Set(selected);
+                  const newSelected = new Set(selected)
                   if (event.target.checked) {
-                    newSelected.add(file.path);
+                    newSelected.add(file.path)
                   } else {
-                    newSelected.delete(file.path);
+                    newSelected.delete(file.path)
                   }
-                  return newSelected;
-                });
+                  return newSelected
+                })
               }}
             />
             <span className="file-name">{file.name}</span>
@@ -891,17 +795,17 @@ function FileItem({
         ))}
       </ul>
     </>
-  );
+  )
 }
 
 const statuses = {
-  initial: "Initial",
-  uploading: "Uploading",
-  processing: "Processing",
-  error: "Error",
-  success: "Success",
-  done: "Done",
-};
+  initial: 'Initial',
+  uploading: 'Uploading',
+  processing: 'Processing',
+  error: 'Error',
+  success: 'Success',
+  done: 'Done'
+}
 
 function generateModalContent(status, completed, total) {
   if (status === statuses.uploading) {
@@ -913,7 +817,7 @@ function generateModalContent(status, completed, total) {
         </Heading>
         <p>Images are being uploaded to be processed by the AI model...</p>
       </>
-    );
+    )
   }
 
   if (status === statuses.error) {
@@ -924,7 +828,7 @@ function generateModalContent(status, completed, total) {
         </Heading>
         <p>Please contact an administrator for assistance.</p>
       </>
-    );
+    )
   }
 
   if (status === statuses.processing) {
@@ -935,9 +839,9 @@ function generateModalContent(status, completed, total) {
           Re-Identification in progress...
         </Heading>
         <p>
-          The Re-Identification AI model is processing your selected images.
-          This is a long-running task. <br />A progress bar will appear if the
-          AI server successfully receives your images. Thanks for your patience.
+          The Re-Identification AI model is processing your selected images. This is a long-running
+          task. <br />A progress bar will appear if the AI server successfully receives your images.
+          Thanks for your patience.
         </p>
 
         {total > 0 && (
@@ -957,7 +861,7 @@ function generateModalContent(status, completed, total) {
                 src="/STOAT.png"
                 className="progress-icon"
                 style={{
-                  left: `${Math.floor((completed / total) * 100) - 2}%`,
+                  left: `${Math.floor((completed / total) * 100) - 2}%`
                 }}
               />
             </div>
@@ -965,6 +869,6 @@ function generateModalContent(status, completed, total) {
           </div>
         )}
       </>
-    );
+    )
   }
 }

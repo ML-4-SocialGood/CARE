@@ -2,11 +2,25 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { browseImage, viewImage, getImagePaths, downloadSelectedGalleryImages } from './controller'
+import {
+  browseDetectImage,
+  browseImage,
+  detect,
+  downloadSelectedGalleryImages,
+  downloadDetectImages,
+  downloadSelectedDetectImages,
+  getDetectImagePaths,
+  getImagePaths,
+  uploadImage,
+  viewDetectImage,
+  viewImage
+} from './controller'
+
+let mainWindow: BrowserWindow
 
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -50,11 +64,32 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  let stream = (txt: string) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('stream', txt)
+    } else {
+      console.log('null mainWindow, cannot send stream data')
+    }
+  }
+
   ipcMain.handle('browseImage', (_, date, folderPath) => browseImage(date, folderPath))
   ipcMain.handle('viewImage', (_, date, imagePath) => viewImage(date, imagePath))
   ipcMain.handle('getImagePaths', (_, currentFolder) => getImagePaths(currentFolder))
   ipcMain.handle('downloadSelectedGalleryImages', (_, selectedPaths) =>
     downloadSelectedGalleryImages(selectedPaths)
+  )
+  ipcMain.handle('uploadImage', (_, relativePath, data) => uploadImage(relativePath, data))
+  ipcMain.handle('detect', (_, selectedPaths) => detect(selectedPaths, stream))
+  ipcMain.handle('browseDetectImage', (_, date, folderPath, filterLabel, confLow, confHigh) =>
+    browseDetectImage(date, folderPath, filterLabel, confLow, confHigh)
+  )
+  ipcMain.handle('viewDetectImage', (_, date, imagePath) => viewDetectImage(date, imagePath))
+  ipcMain.handle('getDetectImagePaths', (_, dirPath, filterLabel, confLow, confHigh) =>
+    getDetectImagePaths(dirPath, filterLabel, confLow, confHigh)
+  )
+  ipcMain.handle('downloadDetectImages', (_, filterLabel) => downloadDetectImages(filterLabel))
+  ipcMain.handle('downloadSelectedDetectImages', (_, selectPaths) =>
+    downloadSelectedDetectImages(selectPaths)
   )
 
   createWindow()

@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom'
 import Modal from '../../../components/Modal'
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
+import Stoat from '@renderer/assets/STOAT.png'
 
 import { add_message, bannerStatuses } from '../../../utils/bannerSlice'
 
@@ -46,7 +47,7 @@ function generateModalContent(status, loadedFileCount, totalCount) {
               {Math.floor((loadedFileCount / totalCount) * 100)}%
             </progress>
             <img
-              src="/STOAT.png"
+              src={Stoat}
               className="progress-icon"
               style={{
                 left: `${Math.floor((loadedFileCount / totalCount) * 100) - 2}%`
@@ -308,7 +309,7 @@ export default function ImageUploader() {
               {Math.floor((loadedFileCount / files.length) * 100)}%
             </progress>
             <img
-              src="/STOAT.png"
+              src={Stoat}
               className="progress-icon"
               style={{
                 left: `${Math.floor((loadedFileCount / files.length) * 100) - 2}%`

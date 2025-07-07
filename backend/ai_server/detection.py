@@ -185,6 +185,7 @@ def process_images_with_pool(yolo_model_path, original_images_dir, output_dir, j
     if total_images == 0:
         log_message(log_file, f"No images found in the folder '{original_images_dir}'.")
         return
+    print(f"PROCESS: 0/{total_images}")
 
     mp.freeze_support()
     manager = mp.Manager()

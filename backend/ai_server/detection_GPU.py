@@ -163,6 +163,7 @@ def run(original_images_dir, output_dir, json_output_dir, log_dir=''):
                 image_paths_list.append(os.path.join(root, file))
 
     num_of_images = len(image_paths_list)
+    print(f"PROCESS: 0/{num_of_images}")
     if num_of_images == 0:
         log_message(log_file, f"No images found in the folder '{original_images_dir}'.")
         return

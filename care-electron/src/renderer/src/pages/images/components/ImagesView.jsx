@@ -13,6 +13,7 @@ import TreeView from '../../../components/TreeView'
 import downloadIcon from '../../../assets/icon-reid-download.svg'
 import downloadIconOnclick from '../../../assets/icon-reid-download_onclick.svg'
 import classNames from 'classnames'
+import Stoat from '@renderer/assets/STOAT.png'
 
 export default function ImagesView({ detects, label, confLow, confHigh }) {
   const dispatch = useDispatch()
@@ -829,7 +830,7 @@ function generateModalContent(status, completed, total) {
                 {Math.floor((completed / total) * 100)}%
               </progress>
               <img
-                src="/STOAT.png"
+                src={Stoat}
                 className="progress-icon"
                 style={{
                   left: `${Math.floor((completed / total) * 100) - 2}%`

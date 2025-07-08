@@ -1,7 +1,7 @@
 import fs from 'fs-extra'
 import path from 'path'
 import archiver from 'archiver'
-import { spawn, ChildProcess } from 'node:child_process'
+import { spawn, ChildProcess, spawnSync } from 'node:child_process'
 import os from 'os'
 
 function getAppDataDir() {
@@ -16,6 +16,10 @@ function getAppDataDir() {
 
 const userProfileDir = getAppDataDir()
 const PYTHON_SCRIPT_PATH = path.join(__dirname, '../../../backend/ai_server/main.py')
+const PYTHON_VENV_INTERPRETER_PATH = path.join(
+  __dirname,
+  '../../../backend/ai_server/.venv/bin/python'
+)
 
 export async function uploadImage(relativePath: string, file: Uint8Array) {
   try {
@@ -347,31 +351,41 @@ function terminateSubprocess() {
   subProcess = null
 }
 
+function conda(): boolean {
+  try {
+    const ps = spawnSync('conda info')
+    return ps.status !== undefined && ps.status == 0
+  } catch (e) {
+    return false
+  }
+}
+
 function spawnPythonSubprocess(args: string[]) {
   let ps: ChildProcess | null = null
+  let python = ''
   if (process.env.PYINSTALLER_EXE !== undefined) {
     console.log(
       `Spawning pyinstaller subprocess: ${process.env.PYINSTALLER_EXE} args: ${args.join(' ')}`
     )
-    try {
-      ps = spawn(process.env.PYINSTALLER_EXE, args)
-    } catch (e) {
-      console.log(e)
-      throw e
-    }
-  } else {
-    // Dev environment. Find script relative to this file.
+    python = process.env.PYINSTALLER_EXE
+  } else if (conda()) {
     const scriptPath = PYTHON_SCRIPT_PATH
     const condaEnv = process.env.DEVICE == 'GPU' ? 'CARE-GPU' : 'CARE'
-    const python = os.platform() == 'win32' ? 'python' : 'python3'
+    python = os.platform() == 'win32' ? 'python' : 'python3'
     args = ['run', '--no-capture-output', '-n', condaEnv, python, scriptPath].concat(args)
-    console.log(`Spawning conda subprocess. 'conda ${args.join(' ')}'`)
-    try {
-      ps = spawn('conda', args)
-    } catch (e) {
-      console.log(e)
-      throw e
-    }
+    console.log(`Spawning conda subprocess.`)
+  } else {
+    // Assume standard Python environment.
+    args = [PYTHON_SCRIPT_PATH, ...args]
+    python = PYTHON_VENV_INTERPRETER_PATH
+    console.log(`Spawning Python from venv.`)
+  }
+  console.log(`Spawn: ${python} ${args.join(' ')}`)
+  try {
+    ps = spawn(python, args)
+  } catch (e) {
+    console.log(e)
+    throw e
   }
   return ps
 }

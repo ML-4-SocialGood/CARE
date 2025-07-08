@@ -4,6 +4,7 @@ import multiprocessing as mp
 import os
 import sys
 import time
+import signal
 
 from datetime import datetime
 from ultralytics import YOLO
@@ -197,13 +198,27 @@ def process_images_with_pool(yolo_model_path, original_images_dir, output_dir, j
         args_list.append((img_path, output_dir, json_output_dir, original_images_dir, log_file, counter, total_images, lock))
 
     num_processes = max(1, min(mp.cpu_count() // 2, 12))
-    with mp.Pool(processes=num_processes, initializer=init_process, initargs=(yolo_model_path,)) as pool:
-        pool.map(worker_process, args_list)
+    with mp.Pool(
+        processes=num_processes,
+        initializer=init_process,
+        initargs=(yolo_model_path,),
+    ) as pool:
+        result = pool.map_async(worker_process, args_list)
+        while not result.ready():
+            result.wait(timeout=1)
 
     print("STATUS: DONE", flush=True)
 
 
+def signal_handler(signum, frame):
+    print(f"Signal received {signum}. Terminating.")
+    sys.exit(0)
+
+
 def run(original_images_dir, output_images_dir, json_output_dir, log_dir):
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+
     log_file = create_log_file(log_dir)
 
     yolo_model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Detector.pt")

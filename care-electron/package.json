@@ -25,8 +25,10 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@reduxjs/toolkit": "^2.8.2",
     "archiver": "^7.0.1",
+    "archiver-utils": "^5.0.2",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
+    "react-paginate": "^8.3.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.3",
     "redux-persist": "^6.0.0"

@@ -1,7 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import ico from '../../resources/icon.ico?asset'
 import icon from '../../resources/icon.png?asset'
+import icns from '../../resources/icon.icns?asset'
 import {
   browseDetectImage,
   browseImage,
@@ -24,14 +26,28 @@ import {
 
 let mainWindow: BrowserWindow
 
+function appIcon(): string {
+  switch (process.platform) {
+    case 'win32': {
+      return ico
+    }
+    case 'darwin': {
+      return icns
+    }
+    default: {
+      return icon
+    }
+  }
+}
+
 function createWindow(): void {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
+    icon: appIcon(),
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false

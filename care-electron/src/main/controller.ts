@@ -4,6 +4,16 @@ import archiver from 'archiver'
 import { spawn, ChildProcess, spawnSync } from 'node:child_process'
 import os from 'os'
 
+// Path to the Python detection/re-identification binary.
+// This is imported as an asset to ensure that the Python binary ends up
+// bundled in the Electron redistributable.
+// This must be built using python/build_pyinstaller_[g|c]pu.py.
+// If you get an error:
+//    Could not resolve "../../resources/care-detect-reid/care-detect-reid?asset&asarUnpack" from "src/main/controller.ts"
+// ... then you need to run the above script to rebuild.
+// You also need to rebuilt the Pyinstaller binary every time you change the Python code!
+import pyinstallerExe from '../../resources/care-detect-reid/care-detect-reid?asset&asarUnpack'
+
 function getAppDataDir() {
   if (process.platform === 'win32') {
     let appDataPath = process.env.APPDATA || process.env.LOCALAPPDATA
@@ -15,11 +25,6 @@ function getAppDataDir() {
 }
 
 const userProfileDir = getAppDataDir()
-const PYTHON_SCRIPT_PATH = path.join(__dirname, '../../../backend/ai_server/main.py')
-const PYTHON_VENV_INTERPRETER_PATH = path.join(
-  __dirname,
-  '../../../backend/ai_server/.venv/bin/python'
-)
 
 export async function uploadImage(relativePath: string, file: Uint8Array) {
   try {
@@ -263,6 +268,17 @@ async function downloadZip(baseDir: string, selectedPaths: string[]) {
   return { ok: true, data: data }
 }
 
+// Schema for the REID JSON file.
+//
+// Example:
+//   {
+//     "ID-0": ["filename1.jpg", "filename2.jpg", ...],
+//     "ID-1": ["filename3.jpg"...]
+//   }
+interface ReidJSON {
+  [key: string]: string[]
+}
+
 export async function downloadReidImages(date: string, time: string) {
   try {
     // Note: This sorts the images into folder by group ID. So we can't just
@@ -299,7 +315,7 @@ export async function downloadReidImages(date: string, time: string) {
     archive.pipe(output)
 
     // Read and parse the JSON file
-    const fileStructure = JSON.parse(fs.readFileSync(targetDir, 'utf-8'))
+    const fileStructure: ReidJSON = JSON.parse(fs.readFileSync(targetDir, 'utf-8'))
 
     // Iterate through the folder (key) and files (value) in the JSON structure
     for (const [folder, files] of Object.entries(fileStructure)) {
@@ -363,22 +379,22 @@ function conda(): boolean {
 function spawnPythonSubprocess(args: string[]) {
   let ps: ChildProcess | null = null
   let python = ''
-  if (process.env.PYINSTALLER_EXE !== undefined) {
-    console.log(
-      `Spawning pyinstaller subprocess: ${process.env.PYINSTALLER_EXE} args: ${args.join(' ')}`
-    )
-    python = process.env.PYINSTALLER_EXE
-  } else if (conda()) {
-    const scriptPath = PYTHON_SCRIPT_PATH
-    const condaEnv = process.env.DEVICE == 'GPU' ? 'CARE-GPU' : 'CARE'
-    python = os.platform() == 'win32' ? 'python' : 'python3'
-    args = ['run', '--no-capture-output', '-n', condaEnv, python, scriptPath].concat(args)
-    console.log(`Spawning conda subprocess.`)
+  if (process.env.PYTHON_SCRIPT_PATH) {
+    if (process.env.VIRTUAL_ENV) {
+      // Standard Python virtual env.
+      python = path.join(process.env.VIRTUAL_ENV, 'bin', 'python')
+      args = [process.env.PYTHON_SCRIPT_PATH, ...args]
+      console.log(`Spawning Python subprocess using venv.`)
+    } else if (conda()) {
+      const scriptPath = process.env.PYTHON_SCRIPT_PATH
+      const condaEnv = process.env.DEVICE == 'GPU' ? 'CARE-GPU' : 'CARE'
+      python = os.platform() == 'win32' ? 'python' : 'python3'
+      args = ['run', '--no-capture-output', '-n', condaEnv, python, scriptPath].concat(args)
+      console.log(`Spawning Conda Python subprocess.`)
+    }
   } else {
-    // Assume standard Python environment.
-    args = [PYTHON_SCRIPT_PATH, ...args]
-    python = PYTHON_VENV_INTERPRETER_PATH
-    console.log(`Spawning Python from venv.`)
+    console.log('Running Pyinstaller Python')
+    python = pyinstallerExe
   }
   console.log(`Spawn: ${python} ${args.join(' ')}`)
   try {
@@ -431,9 +447,8 @@ export async function detect(selectedPaths: string[], stream: (txt: string) => v
       }
     }
 
-    const device = process.env.DEVICE === 'GPU' ? 'gpu' : 'cpu'
     let args = [
-      'detection-' + device,
+      'detection',
       path.join(userProfileDir, 'temp/image_detection_pending', userIdFolder),
       path.join(userProfileDir, 'data/image_marked', userIdFolder),
       path.join(userProfileDir, 'data/image_cropped_json', userIdFolder),
@@ -741,9 +756,8 @@ export async function runReid(selectedPaths: string[], stream: (txt: string) => 
       }
     }
 
-    const device = process.env.DEVICE === 'GPU' ? 'gpu' : 'cpu'
     let args = [
-      'reid-' + device,
+      'reid',
       path.join(userProfileDir, 'temp/image_reid_pending', userIdFolder),
       path.join(userProfileDir, 'data/image_cropped_json', userIdFolder),
       path.join(userProfileDir, 'temp/image_cropped_reid_pending', userIdFolder),

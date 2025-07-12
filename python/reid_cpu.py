@@ -254,15 +254,15 @@ def run(image_dir, json_dir, output_dir, reid_output_dir, log_dir = ''):
     process_images_in_folder(image_dir, json_dir, output_dir, log_file)
 
     DEVICE = "cpu"
+    model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "CARE_Traced.pt")
+    cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "vit_care.yml")
 
     # Read and import the cfg file.
-    cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vit_care.yml")
     cfg.merge_from_file(cfg_file_path)
     cfg.merge_from_list([])
     cfg.freeze()
 
     # Load the traced reid model.
-    model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "CARE_Traced.pt")
     CARE_Model = torch.jit.load(model_path)
     CARE_Model = CARE_Model.to(DEVICE)
     CARE_Model.eval()    # set the model in evaluation mode

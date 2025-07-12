@@ -254,6 +254,9 @@ def run(image_dir, json_dir, output_dir, reid_output_dir, log_dir = ''):
     log_file = create_log_file(log_dir)
     clear_cropped_folder(output_dir, log_file)
 
+    model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "CARE_Traced_GPUv.pt")
+    cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "vit_care.yml")
+
     print("STATUS: BEGIN", flush=True)
 
     process_images_in_folder(image_dir, json_dir, output_dir, log_file)
@@ -262,19 +265,18 @@ def run(image_dir, json_dir, output_dir, reid_output_dir, log_dir = ''):
     DEVICE = "cuda"
 
     # Read and import the cfg file.
-    cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vit_care.yml")
     cfg.merge_from_file(cfg_file_path)
     cfg.merge_from_list([])
     cfg.freeze()
 
     # Load the traced reid model.
     try:
-        model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "CARE_Traced_GPUv.pt")
         CARE_Model = torch.jit.load(model_path)
         CARE_Model = CARE_Model.to(DEVICE)
         CARE_Model.eval()    # set the model in evaluation mode
     except Exception as e:
         log_message(log_file, f'Errors: {e}')
+        raise e
 
     cropped_image_paths = sorted(glob.glob(os.path.join(output_dir, "**", "*.jpg"), recursive=True))
     if not cropped_image_paths:

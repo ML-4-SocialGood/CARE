@@ -6,11 +6,7 @@ bundle a single Python interpreter and all deps as a single pyinstaller package.
 
 Build with:
 
-    pyinstaller --name care \
-        --add-data vit_care.yml:. \
-        --add-data CARE_Traced.pt:. \
-        --add-data Detector.pt:. \
-        main.py
+    ./python/build_pyinstaller_cpu.sh
 
 Test with:
 
@@ -21,28 +17,24 @@ Test with:
         /tmp/care/reid_json_output \
         /tmp/care/logs
 
-    dist/care/care detection-cpu \
+    python main_cpu.py detection \
         /Users/cpearce/Downloads/Test-Data \
         /tmp/care/detection_images \
         /tmp/care/detection_json \
         /tmp/care/logs
 
-    dist/care/care reid-cpu \
+    python main_cpu.py reid \
         /tmp/care/detection_images \
         /tmp/care/detection_json \
         /tmp/care/reid_image_output \
         /tmp/care/reid_json_output \
-        vit_care.yml \
         /tmp/care/logs
-
 """
 
 import sys
-import detection
-import detection_GPU
+import detection_cpu
 import multiprocessing
-import ReID
-import ReID_GPU
+import reid_cpu
 
 
 def main():
@@ -54,7 +46,7 @@ def main():
         sys.exit(1)
     task = sys.argv[1]
     match (task):
-        case "reid-cpu":
+        case "reid":
             args = [
                 "image_dir",
                 "json_dir",
@@ -62,32 +54,15 @@ def main():
                 "reid_output_dir",
                 "log_dir",
             ]
-            run = ReID.run
-        case "reid-gpu":
-            args = [
-                "image_dir",
-                "json_dir",
-                "output_dir",
-                "reid_output_dir",
-                "log_dir",
-            ]
-            run = ReID_GPU.run
-        case "detection-cpu":
+            run = reid_cpu.run
+        case "detection":
             args = [
                 "original_images_dir",
                 "output_images_dir",
                 "json_output_dir",
                 "log_dir",
             ]
-            run = detection.run
-        case "detection-gpu":
-            args = [
-                "original_images_dir",
-                "output_images_dir",
-                "json_output_dir",
-                "log_dir",
-            ]
-            run = detection.run
+            run = detection_cpu.run
         case _:
             print(f"Invalid option {task}")
             sys.exit(1)

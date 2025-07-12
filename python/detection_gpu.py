@@ -140,13 +140,14 @@ def save_detection_results(image_paths, predictions, image_output_path, original
 
 
 def run(original_images_dir, output_dir, json_output_dir, log_dir=''):
+    model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "Detector_GPU.pt")
     log_file = create_log_file(log_dir)
-    yolo_model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Detector_GPU.pt")
     try:
         DEVICE = "cuda"
-        yolo_model = YOLO(yolo_model_path).to(DEVICE)
+        yolo_model = YOLO(model_path).to(DEVICE)
     except Exception as e:
         log_message(log_file, f"Error processing image: {str(e)}")
+        raise e
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)

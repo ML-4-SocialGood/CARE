@@ -220,12 +220,12 @@ def run(original_images_dir, output_images_dir, json_output_dir, log_dir):
     signal.signal(signal.SIGINT, signal_handler)
 
     log_file = create_log_file(log_dir)
+    model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "Detector.pt")
 
-    yolo_model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Detector.pt")
     start_time = time.time()
-    process_images_with_pool(yolo_model_path, original_images_dir, output_images_dir, json_output_dir, log_file)
-
+    process_images_with_pool(model_path, original_images_dir, output_images_dir, json_output_dir, log_file)
     end_time = time.time()
+
     total_time = end_time - start_time
     log_message(log_file, f"Total processing time: {total_time:.2f} seconds")
 

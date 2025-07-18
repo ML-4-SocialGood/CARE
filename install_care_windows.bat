@@ -1,3 +1,4 @@
+:: Deprecated. Non functional.
 @echo off
 
 :: Call Python script and capture output
@@ -35,7 +36,7 @@ if "%DEVICE%"=="CPU" (
     echo.
 	call conda create --name CARE-GPU python=3.10 -y
 	call conda activate CARE-GPU
-	
+
 	if "%CUDA%"=="11.8" (
 	    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 	) else if "%CUDA%"=="12.4" (

@@ -3,11 +3,12 @@ import path from 'path'
 import archiver from 'archiver'
 import { spawn, ChildProcess, spawnSync } from 'node:child_process'
 import os from 'os'
+const { dialog } = require('electron')
 
 // Path to the Python detection/re-identification binary.
 // This is imported as an asset to ensure that the Python binary ends up
 // bundled in the Electron redistributable.
-// This must be built using python/build_pyinstaller_[g|c]pu.py.
+// This must be built using python/build_pyinstaller.[sh|bat].
 // If you get an error:
 //    Could not resolve "../../resources/care-detect-reid/care-detect-reid?asset&asarUnpack" from "src/main/controller.ts"
 // ... then you need to run the above script to rebuild.
@@ -228,16 +229,27 @@ export async function viewDetectImage(date: string, imagePath: string) {
   }
 }
 
-async function downloadZip(baseDir: string, selectedPaths: string[]) {
+async function saveZip(baseDir: string, selectedPaths: string[], filename: string) {
   // Check if selectedPaths is an array and contains at least one file path
   if (!Array.isArray(selectedPaths) || selectedPaths.length === 0) {
     return { ok: false, error: 'No image paths provided.' }
   }
 
-  // Ensure the base directory exists
-  fs.ensureDirSync(baseDir)
-  const archivePath = userProfileDir + '/images.zip'
-  const output = fs.createWriteStream(archivePath)
+  // Ensure the files exist before archiving.
+  if (!fs.existsSync(baseDir)) {
+    return { ok: false, error: 'Base source dir not found.' }
+  }
+
+  const result = await dialog.showSaveDialog({
+    title: 'Save archive as',
+    filter: [{ name: 'Zip', extensions: ['zip'] }],
+    defaultPath: filename
+  })
+  if (result.canceled) {
+    return { ok: true }
+  }
+
+  const output = fs.createWriteStream(result.filePath, { flush: true })
 
   const archive = archiver('zip', {
     zlib: { level: 0 } // Sets the compression level
@@ -259,13 +271,16 @@ async function downloadZip(baseDir: string, selectedPaths: string[]) {
   }
 
   // Finalize the archive (i.e., finish the zipping process)
-  await archive.finalize()
-  await new Promise((resolve, _) => {
-    output.close(resolve)
+  const endPromise = new Promise<void>((resolve, _) => {
+    output.on('finish', resolve)
+  })
+  const closePromise = new Promise<void>((resolve, _) => {
+    output.on('close', resolve)
   })
 
-  const data = await fs.readFile(archivePath)
-  return { ok: true, data: data }
+  await Promise.all([archive.finalize(), endPromise, closePromise])
+
+  return { ok: true }
 }
 
 // Schema for the REID JSON file.
@@ -282,7 +297,7 @@ interface ReidJSON {
 export async function downloadReidImages(date: string, time: string) {
   try {
     // Note: This sorts the images into folder by group ID. So we can't just
-    // use downloadZip here.
+    // use saveZip here.
     const userIdFolder = '1'
     const baseDir = path.join(userProfileDir, 'data/image_reid_output', userIdFolder)
     const baseImgDir = path.join(userProfileDir, 'data/image_marked', userIdFolder)
@@ -304,8 +319,16 @@ export async function downloadReidImages(date: string, time: string) {
 
     // Ensure the base directory exists
     fs.ensureDirSync(baseDir)
-    const archivePath = userProfileDir + '/images.zip'
-    const output = fs.createWriteStream(archivePath)
+
+    const result = await dialog.showSaveDialog({
+      title: 'Save archive as',
+      filter: [{ name: 'Zip', extensions: ['zip'] }],
+      defaultPath: `reid_images_${timestamp()}.zip`
+    })
+    if (result.canceled) {
+      return { ok: true }
+    }
+    const output = fs.createWriteStream(result.filePath)
 
     const archive = archiver('zip', {
       zlib: { level: 0 } // Sets the compression level
@@ -338,8 +361,7 @@ export async function downloadReidImages(date: string, time: string) {
       output.close(resolve)
     })
 
-    const data = await fs.readFile(archivePath)
-    return { ok: true, data: data }
+    return { ok: true }
   } catch (error) {
     console.log(error)
     return { ok: false, error: 'downloadReidImages: ' + error }
@@ -350,7 +372,8 @@ export async function downloadSelectedGalleryImages(selectedPaths: string[]) {
   try {
     const userIdFolder = '1'
     const baseDir = path.join(userProfileDir, 'data/image_uploaded', userIdFolder)
-    return downloadZip(baseDir, selectedPaths)
+    const filename = `gallery_images_${timestamp()}.zip`
+    return saveZip(baseDir, selectedPaths, filename)
   } catch (error: unknown) {
     return { ok: false, error: 'downloadSelectedGalleryImages failed: ' + error }
   }
@@ -699,18 +722,32 @@ export async function downloadDetectImages(filterLabel: string) {
     const baseDir = path.join(userProfileDir, 'data/image_marked', userIdFolder)
     fs.ensureDirSync(baseDir)
     const filePaths = await getDetectFilePaths(baseDir, baseDir, filterLabel, 0, 1)
-    return downloadZip(baseDir, filePaths)
+    const filename = `detection_${filterLabel}_images_${timestamp()}.zip`
+    return saveZip(baseDir, filePaths, filename)
   } catch (error) {
     console.log(error)
     return { ok: false, error: 'downloadDetectImages failed: ' + error }
   }
 }
 
+function timestamp(): string {
+  // Generate timestamp-based zip filename using current timezone in YYYYMMDD_HHMMSS format
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0') // Months are 0-based
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  return `${year}${month}${day}_${hours}${minutes}${seconds}`
+}
+
 export async function downloadSelectedDetectImages(selectPaths: string[]) {
   try {
     const userIdFolder = '1'
     const baseDir = path.join(userProfileDir, 'data/image_marked', userIdFolder)
-    return downloadZip(baseDir, selectPaths)
+    const filename = `detection_images_${timestamp()}.zip`
+    return saveZip(baseDir, selectPaths, filename)
   } catch (error) {
     console.log(error)
     return { ok: false, error: 'downloadSelectedDetectImages failed: ' + error }

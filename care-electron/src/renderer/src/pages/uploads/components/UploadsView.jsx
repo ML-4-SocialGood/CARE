@@ -190,26 +190,6 @@ export default function UploadsView({ uploads }) {
       if (!response.ok) {
         throw new Error(response.error)
       }
-
-      // Generate timestamp-based zip filename using current timezone in YYYYMMDD_HHMMSS format
-      const now = new Date()
-      const year = now.getFullYear()
-      const month = String(now.getMonth() + 1).padStart(2, '0') // Months are 0-based
-      const day = String(now.getDate()).padStart(2, '0')
-      const hours = String(now.getHours()).padStart(2, '0')
-      const minutes = String(now.getMinutes()).padStart(2, '0')
-      const seconds = String(now.getSeconds()).padStart(2, '0')
-
-      const localTimestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`
-      const filename = `gallery_download_${localTimestamp}.zip`
-
-      const url = window.URL.createObjectURL(new Blob([response.archive]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', filename)
-      document.body.appendChild(link)
-      link.click()
-      link.parentNode.removeChild(link)
     } catch (err) {
       console.error(err)
       dispatch(

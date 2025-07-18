@@ -50,17 +50,7 @@ export default function Images() {
     setIsLoading(true)
     try {
       const response = await window.api.downloadDetectImages(selectedSpecies)
-      if (response.ok) {
-        const blob = new Blob([response.data], { type: 'application/octet-stream' })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = selectedSpecies ? `${selectedSpecies}_images.zip` : `all_images.zip`
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        window.URL.revokeObjectURL(url)
-      } else {
+      if (!response.ok) {
         const errorText = await response.text()
         dispatch(
           add_message({

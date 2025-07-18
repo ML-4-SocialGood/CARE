@@ -4,7 +4,7 @@
 
 You must install Python3.
 
-Recommended approach is to use a virtualenv to isolate required packages:
+Recommended approach is to use a virtualenv to isolate required dependencies:
 
 ```
 python3 -m venv .venv
@@ -32,7 +32,10 @@ We use the same venv for both CPU and GPU models for simplicity.
 
 The Python script and runtime is packaged with the Electron frontend by building
 a Pyinstaller distribution. Build the Pyinstaller runtime using the
-`build_pyinstaller_[cpu|gpu].[sh|bat]` scripts.
+`build_pyinstaller.[sh|bat]` scripts.
+
+The Python script detects whether Cuda is available, uses the GPU model if so,
+otherwise falls back to the CPU model.
 
 The Pyinstaller distribution includes the Python interpreter from the environment
 that which runs the build script. So it includes a copy of the venv's Python
@@ -40,7 +43,7 @@ interpreter, plus all its pip dependencies. As such, to deploy on multiple
 platforms, you need to run the build script on that platform.
 
 Note the model PT files need to be copied into `python/models/` before the
-build.
+build. Contact the project owners to get a copy of the models.
 
 Conda is not recommended for deployment, as it has behavior differences with
 Python multiprocessing; specifically, it doesn't handle shutdown signals correctly,
@@ -54,7 +57,7 @@ the electon process, e.g.:
 
 ```
 cd care-electron
-PYTHON_SCRIPT_PATH=../python/main_cpu.py npm run dev
+PYTHON_SCRIPT_PATH=../python/main.py npm run dev
 ```
 
 Unfortunately, you still need to have built the Pyinstaller server at least once

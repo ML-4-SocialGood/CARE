@@ -6,7 +6,7 @@ bundle a single Python interpreter and all deps as a single pyinstaller package.
 
 Build with:
 
-    ./python/build_pyinstaller_cpu.sh
+    ./python/build_pyinstaller.sh
 
 Test with:
 
@@ -17,13 +17,13 @@ Test with:
         /tmp/care/reid_json_output \
         /tmp/care/logs
 
-    python main_cpu.py detection \
+    python main.py detection \
         /Users/cpearce/Downloads/Test-Data \
         /tmp/care/detection_images \
         /tmp/care/detection_json \
         /tmp/care/logs
 
-    python main_cpu.py reid \
+    python main.py reid \
         /tmp/care/detection_images \
         /tmp/care/detection_json \
         /tmp/care/reid_image_output \
@@ -31,10 +31,14 @@ Test with:
         /tmp/care/logs
 """
 
-import sys
-import detection_cpu
 import multiprocessing
+import sys
+import torch
+
+import detection_cpu
+import detection_gpu
 import reid_cpu
+import reid_gpu
 
 
 def main():
@@ -45,6 +49,7 @@ def main():
         print("No task specified.")
         sys.exit(1)
     task = sys.argv[1]
+    print(f"torch.cuda.is_available(): {torch.cuda.is_available()}")
     match (task):
         case "reid":
             args = [
@@ -54,7 +59,10 @@ def main():
                 "reid_output_dir",
                 "log_dir",
             ]
-            run = reid_cpu.run
+            if torch.cuda.is_available():
+                run = reid_gpu.run
+            else:
+                run = reid_cpu.run
         case "detection":
             args = [
                 "original_images_dir",
@@ -62,7 +70,10 @@ def main():
                 "json_output_dir",
                 "log_dir",
             ]
-            run = detection_cpu.run
+            if torch.cuda.is_available():
+                run = detection_gpu.run
+            else:
+                run = detection_cpu.run
         case _:
             print(f"Invalid option {task}")
             sys.exit(1)

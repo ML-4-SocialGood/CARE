@@ -1,60 +1,52 @@
 /** @format */
-import { useState, useEffect, useRef } from "react";
-import PropTypes from "prop-types";
-import clsx from "clsx";
-import "./Nav.css";
+import { useState, useEffect, useRef } from 'react'
+import PropTypes from 'prop-types'
+import clsx from 'clsx'
+import './Nav.css'
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from 'react-router-dom'
 
 export default function NavBar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const navRef = useRef();
-  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false)
+  const navRef = useRef()
+  const location = useLocation()
 
   const handleClick = () => {
-    setMenuOpen(!menuOpen);
-  };
+    setMenuOpen(!menuOpen)
+  }
 
   useEffect(() => {
     if (menuOpen) {
-      navRef.current?.focus();
+      navRef.current?.focus()
     }
-  }, [menuOpen]);
+  }, [menuOpen])
 
   const createLinks = () => (
     // TODO: update these links
     <>
       <NavLink
-        className={
-          location.pathname === "/upload" ? "nav__link__anchor-active" : null
-        }
+        className={location.pathname === '/upload' ? 'nav__link__anchor-active' : null}
         href="/upload"
       >
-        Image Uploader
+        Add Images
       </NavLink>
 
       <NavLink
-        className={
-          location.pathname === "/uploads" ? "nav__link__anchor-active" : null
-        }
+        className={location.pathname === '/uploads' ? 'nav__link__anchor-active' : null}
         href="/uploads"
       >
         Image Gallery
       </NavLink>
 
       <NavLink
-        className={
-          location.pathname === "/images" ? "nav__link__anchor-active" : null
-        }
+        className={location.pathname === '/images' ? 'nav__link__anchor-active' : null}
         href="/images"
       >
         Detection Gallery
       </NavLink>
 
       <NavLink
-        className={
-          location.pathname === "/reid" ? "nav__link__anchor-active" : null
-        }
+        className={location.pathname === '/reid' ? 'nav__link__anchor-active' : null}
         href="/reid"
       >
         ReID Gallery
@@ -64,7 +56,7 @@ export default function NavBar() {
 
       <DropdownMenu></DropdownMenu>
     </>
-  );
+  )
 
   return (
     <>
@@ -74,43 +66,33 @@ export default function NavBar() {
         data-menu-open={menuOpen}
         ref={navRef}
       >
-        <ul className={clsx("nav__links", "nav__links--signed-in")}>
-          {createLinks()}
-        </ul>
+        <ul className={clsx('nav__links', 'nav__links--signed-in')}>{createLinks()}</ul>
       </nav>
     </>
-  );
+  )
 }
 
 const DropdownMenu = () => {
-  const location = useLocation();
+  const location = useLocation()
   return (
     <>
       <div className="dropdown">
         <button className="dropdown-button">Navigation</button>
         <div className="dropdown-menu">
           <NavLink
-            className={
-              location.pathname === "/" ? "nav__link__anchor-active" : null
-            }
+            className={location.pathname === '/' ? 'nav__link__anchor-active' : null}
             href="/"
           >
             Home
           </NavLink>
           <NavLink
-            className={
-              location.pathname === "/about" ? "nav__link__anchor-active" : null
-            }
+            className={location.pathname === '/about' ? 'nav__link__anchor-active' : null}
             href="/about"
           >
             About
           </NavLink>
           <NavLink
-            className={
-              location.pathname === "/user-guide"
-                ? "nav__link__anchor-active"
-                : null
-            }
+            className={location.pathname === '/user-guide' ? 'nav__link__anchor-active' : null}
             href="/user-guide"
           >
             User Guide
@@ -118,22 +100,22 @@ const DropdownMenu = () => {
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
 const NavLink = ({ isAnchor, href, children, className }) => {
-  const linkClass = clsx("nav__link__anchor", className);
+  const linkClass = clsx('nav__link__anchor', className)
 
   return (
     <li className="nav__link">
       {isAnchor ? (
         <span
-          tabIndex={"0"}
+          tabIndex={'0'}
           onClick={() => {
-            const el = document.getElementById(href.substring(1));
+            const el = document.getElementById(href.substring(1))
 
             if (el) {
-              el.scrollIntoView();
+              el.scrollIntoView()
             }
           }}
           className={linkClass}
@@ -146,19 +128,19 @@ const NavLink = ({ isAnchor, href, children, className }) => {
         </Link>
       )}
     </li>
-  );
-};
+  )
+}
 
 NavLink.propTypes = {
   isAnchor: PropTypes.bool,
   className: PropTypes.string,
   href: PropTypes.string.isRequired,
-  children: PropTypes.node,
-};
+  children: PropTypes.node
+}
 
 const BurgerButton = ({ handleClick, menuOpen }) => {
-  const openMenuLabel = "Open and skip to navigation";
-  const closeMenuLabel = "Close and hide navigation";
+  const openMenuLabel = 'Open and skip to navigation'
+  const closeMenuLabel = 'Close and hide navigation'
   return (
     <button
       role="button"
@@ -173,10 +155,10 @@ const BurgerButton = ({ handleClick, menuOpen }) => {
       <div className="nav__burger__line" />
       <div className="nav__burger__line" />
     </button>
-  );
-};
+  )
+}
 
 BurgerButton.propTypes = {
   handleClick: PropTypes.func,
-  menuOpen: PropTypes.bool,
-};
+  menuOpen: PropTypes.bool
+}

@@ -240,7 +240,7 @@ export default function UploadsView({ uploads }) {
           />
         ) : (
           <div className="uploads-file-list-warning">
-            You can check your uploaded images here. <br />
+            You can check your added images here. <br />
             Please select a folder from the folder tree.
           </div>
         )}
@@ -389,7 +389,7 @@ function PaginateItems({
           onClick={handleDownload}
           disabled={selected.size === 0} // Disable if nothing is selected
         >
-          Download Selected
+          Save Selected
           {selected.size > 0 && <span className="upload-button-count">{selected.size}</span>}
         </Button>
         <Button
@@ -460,7 +460,7 @@ function PaginateItems({
         onClick={handleDownload}
         disabled={selected.size === 0} // Disable if nothing is selected
       >
-        Download Selected
+        Save Selected
         {selected.size > 0 && <span className="upload-button-count">{selected.size}</span>}
       </Button>
       {/* "Run Detection" button always visible */}

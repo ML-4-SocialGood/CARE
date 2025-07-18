@@ -277,7 +277,7 @@ export default function ImageUploader() {
           <br />
           or
           <div className={clsx('button', 'button-primary', 'drop-zone__button__target')}>
-            click to add
+            Click to Add
           </div>
         </button>
         <label htmlFor="file_uploader" className="visually-hidden">
@@ -328,7 +328,7 @@ export default function ImageUploader() {
               onClick={handleUploadClick}
               disabled={status === statuses.uploading}
             >
-              Upload
+              Add Images
             </Button>
           ) : null}
           {showModal &&
@@ -385,7 +385,7 @@ const createFileList = (files, setFiles, currentFolder, setCurrentFolder, folder
       <div className="uploads">
         <div className="uploads__title">
           {/* <Heading level={2}>Selected Folder</Heading> */}
-          <Heading level={2}>Upload list</Heading>
+          <Heading level={2}>Images list</Heading>
           <Button className="uploads__clear-all" onClick={() => setFiles([])}>
             Clear all
           </Button>

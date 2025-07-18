@@ -1,3 +1,4 @@
+:: Deprecated. Non functional.
 @echo off
 
 :: Call Python script and capture output

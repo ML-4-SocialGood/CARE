@@ -421,7 +421,7 @@ function PaginateItems({
           onClick={handleDownload}
           disabled={selected.size === 0} // Disable if nothing is selected
         >
-          Download Selected
+          Save Selected
           {selected.size > 0 && <span className="upload-button-count">{selected.size}</span>}
         </Button>
         <Button
@@ -492,7 +492,7 @@ function PaginateItems({
         onClick={handleDownload}
         disabled={selected.size === 0} // Disable if nothing is selected
       >
-        Download Selected
+        Save Selected
         {selected.size > 0 && <span className="upload-button-count">{selected.size}</span>}
       </Button>
       {/* "Run Detection" button always visible */}

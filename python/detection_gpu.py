@@ -139,7 +139,7 @@ def save_detection_results(image_paths, predictions, image_output_path, original
             log_message(log_file, f"Error processing image: {str(e)}")
 
 
-def run(original_images_dir, output_dir, json_output_dir, log_dir=''):
+def run(original_images_dir, output_images_dir, json_output_dir, log_dir=''):
     model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "Detector_GPU.pt")
     log_file = create_log_file(log_dir)
     try:
@@ -149,8 +149,8 @@ def run(original_images_dir, output_dir, json_output_dir, log_dir=''):
         log_message(log_file, f"Error processing image: {str(e)}")
         raise e
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir, exist_ok=True)
+    if not os.path.exists(output_images_dir):
+        os.makedirs(output_images_dir, exist_ok=True)
     if not os.path.exists(json_output_dir):
         os.makedirs(json_output_dir, exist_ok=True)
     if not os.path.exists(original_images_dir):
@@ -180,7 +180,7 @@ def run(original_images_dir, output_dir, json_output_dir, log_dir=''):
         process_images = image_paths_list[counter:min(counter + batch_size, num_of_images)]
         preds = yolo_model(process_images, verbose = False)
         save_detection_results(image_paths = process_images, predictions = preds,
-                               image_output_path = output_dir, original_images_dir = original_images_dir,
+                               image_output_path = output_images_dir, original_images_dir = original_images_dir,
                                json_output_path = json_output_dir, log_file = log_file)
 
         print(f"PROCESS: {min(counter + batch_size, num_of_images)}/{num_of_images}", flush=True)

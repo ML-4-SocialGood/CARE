@@ -6,15 +6,21 @@ You must install Python3.
 
 Recommended approach is to use a virtualenv to isolate required dependencies:
 
-```
+On Mac/Linux:
+
+```bash
 python3 -m venv .venv
 pip install -r requirements.txt
-```
-
-To activate virtualenv:
-
-```
 source .venv/bin/activate
+```
+
+On Windows (with Cuda 12.8):
+
+```
+python3 -m venv .venv
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+pip install -r requirements-win32.txt
+.venv\Scripts\activate.bat
 ```
 
 To install new packages:

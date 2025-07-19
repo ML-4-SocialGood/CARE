@@ -56,6 +56,9 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    if (process.env.OPEN_DEVTOOLS === 'true' || app.commandLine.hasSwitch('debug')) {
+      mainWindow.webContents.openDevTools();
+    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

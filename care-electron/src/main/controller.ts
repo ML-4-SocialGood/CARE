@@ -3,8 +3,8 @@ import path from 'path'
 import archiver from 'archiver'
 import { spawn, ChildProcess, spawnSync } from 'node:child_process'
 import os from 'os'
-import { app, dialog } from 'electron';
-import { mime } from 'mime-types'
+import { app, dialog } from 'electron'
+import { lookup } from 'mime-types'
 
 function getAppDataDir() {
   if (process.platform === 'win32') {
@@ -197,7 +197,7 @@ async function viewImageInPath(dir: string, date: string, imagePath: string) {
     return { ok: false, error: 'Path is a directory, not an image file.' }
   }
 
-  const mimeType = mime.lookup(targetDir)
+  const mimeType = lookup(targetDir)
   if (!mimeType || !mimeType.startsWith('image/')) {
     return { ok: false, error: 'The requested file is not an image.' }
   }
@@ -416,8 +416,14 @@ function spawnPythonSubprocess(args: string[]) {
     // GOT: C:\Users\chris\AppData\Local\Programs\resources\care-detect-reid
     console.log('Running Pyinstaller Python')
     if (app.isPackaged) {
-      const ext = (os.platform() == 'win32' ? '.exe' : '')
-      python = path.join(process.resourcesPath, 'app.asar.unpacked', 'resources', 'care-detect-reid', `care-detect-reid${ext}`)
+      const ext = os.platform() == 'win32' ? '.exe' : ''
+      python = path.join(
+        process.resourcesPath,
+        'app.asar.unpacked',
+        'resources',
+        'care-detect-reid',
+        `care-detect-reid${ext}`
+      )
     } else {
       python = path.join(__dirname, `../../resources/care-detect-reid/care-detect-reid`)
     }

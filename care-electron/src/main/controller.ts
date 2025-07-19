@@ -3,17 +3,8 @@ import path from 'path'
 import archiver from 'archiver'
 import { spawn, ChildProcess, spawnSync } from 'node:child_process'
 import os from 'os'
-const { dialog } = require('electron')
-
-// Path to the Python detection/re-identification binary.
-// This is imported as an asset to ensure that the Python binary ends up
-// bundled in the Electron redistributable.
-// This must be built using python/build_pyinstaller.[sh|bat].
-// If you get an error:
-//    Could not resolve "../../resources/care-detect-reid/care-detect-reid?asset&asarUnpack" from "src/main/controller.ts"
-// ... then you need to run the above script to rebuild.
-// You also need to rebuilt the Pyinstaller binary every time you change the Python code!
-import pyinstallerExe from '../../resources/care-detect-reid/care-detect-reid?asset&asarUnpack'
+import { app, dialog } from 'electron';
+import { mime } from 'mime-types'
 
 function getAppDataDir() {
   if (process.platform === 'win32') {
@@ -206,7 +197,6 @@ async function viewImageInPath(dir: string, date: string, imagePath: string) {
     return { ok: false, error: 'Path is a directory, not an image file.' }
   }
 
-  const mime = require('mime-types')
   const mimeType = mime.lookup(targetDir)
   if (!mimeType || !mimeType.startsWith('image/')) {
     return { ok: false, error: 'The requested file is not an image.' }
@@ -242,7 +232,7 @@ async function saveZip(baseDir: string, selectedPaths: string[], filename: strin
 
   const result = await dialog.showSaveDialog({
     title: 'Save archive as',
-    filter: [{ name: 'Zip', extensions: ['zip'] }],
+    filters: [{ name: 'Zip', extensions: ['zip'] }],
     defaultPath: filename
   })
   if (result.canceled) {
@@ -322,7 +312,7 @@ export async function downloadReidImages(date: string, time: string) {
 
     const result = await dialog.showSaveDialog({
       title: 'Save archive as',
-      filter: [{ name: 'Zip', extensions: ['zip'] }],
+      filters: [{ name: 'Zip', extensions: ['zip'] }],
       defaultPath: `reid_images_${timestamp()}.zip`
     })
     if (result.canceled) {
@@ -402,10 +392,16 @@ function conda(): boolean {
 function spawnPythonSubprocess(args: string[]) {
   let ps: ChildProcess | null = null
   let python = ''
+
+  console.log(`process.resourcesPath=${process.resourcesPath}`)
   if (process.env.PYTHON_SCRIPT_PATH) {
     if (process.env.VIRTUAL_ENV) {
       // Standard Python virtual env.
-      python = path.join(process.env.VIRTUAL_ENV, 'bin', 'python')
+      if (os.platform() == 'win32') {
+        python = path.join(process.env.VIRTUAL_ENV, 'Scripts', 'python')
+      } else {
+        python = path.join(process.env.VIRTUAL_ENV, 'bin', 'python')
+      }
       args = [process.env.PYTHON_SCRIPT_PATH, ...args]
       console.log(`Spawning Python subprocess using venv.`)
     } else if (conda()) {
@@ -416,8 +412,15 @@ function spawnPythonSubprocess(args: string[]) {
       console.log(`Spawning Conda Python subprocess.`)
     }
   } else {
+    // Want: C:\Users\chris\AppData\Local\Programs\care-electron\resources\app.asar.unpacked\resources\care-detect-reid
+    // GOT: C:\Users\chris\AppData\Local\Programs\resources\care-detect-reid
     console.log('Running Pyinstaller Python')
-    python = pyinstallerExe
+    if (app.isPackaged) {
+      const ext = (os.platform() == 'win32' ? '.exe' : '')
+      python = path.join(process.resourcesPath, 'app.asar.unpacked', 'resources', 'care-detect-reid', `care-detect-reid${ext}`)
+    } else {
+      python = path.join(__dirname, `../../resources/care-detect-reid/care-detect-reid`)
+    }
   }
   console.log(`Spawn: ${python} ${args.join(' ')}`)
   try {

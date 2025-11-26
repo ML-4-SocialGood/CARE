@@ -133,3 +133,5 @@ dist
 /database.sqlite
 
 .venv
+
+dinov3

@@ -145,4 +145,11 @@ python/**/__pycache__
 python/build
 python/care-detect-reid.spec
 python/models/*.pt
+python/models/*.pth
+python/models/*.pth.tar*
+python/_det_images/
+python/_det_json/
+python/_logs/
+python/_reid_json_output/
+readme_media/detection_results.json
 .DS_Store

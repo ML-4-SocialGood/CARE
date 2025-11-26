@@ -7,7 +7,7 @@
     display: none;
     position: absolute;
     overflow-y: auto;
-    max-height: 20%;
+    max-height: 30%;
     min-width: 10%;
     -webkit-user-select: none; /* Prevent text selection */
     user-select: none; /* Safari compatibility */

@@ -16,10 +16,27 @@ export default function NavBar() {
   }
 
   useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        navRef.current &&
+        !navRef.current.contains(event.target) &&
+        !event.target.closest('.nav__burger')
+      ) {
+        setMenuOpen(false)
+      }
+    }
+
     if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
       navRef.current?.focus()
     }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
   }, [menuOpen])
+
+  const closeMenu = () => setMenuOpen(false)
 
   const createLinks = () => (
     // TODO: update these links
@@ -27,6 +44,7 @@ export default function NavBar() {
       <NavLink
         className={location.pathname === '/upload' ? 'nav__link__anchor-active' : null}
         href="/upload"
+        onClick={closeMenu}
       >
         Add Images
       </NavLink>
@@ -34,6 +52,7 @@ export default function NavBar() {
       <NavLink
         className={location.pathname === '/uploads' ? 'nav__link__anchor-active' : null}
         href="/uploads"
+        onClick={closeMenu}
       >
         Image Gallery
       </NavLink>
@@ -41,6 +60,7 @@ export default function NavBar() {
       <NavLink
         className={location.pathname === '/images' ? 'nav__link__anchor-active' : null}
         href="/images"
+        onClick={closeMenu}
       >
         Detection Gallery
       </NavLink>
@@ -48,13 +68,14 @@ export default function NavBar() {
       <NavLink
         className={location.pathname === '/reid' ? 'nav__link__anchor-active' : null}
         href="/reid"
+        onClick={closeMenu}
       >
         ReID Gallery
       </NavLink>
 
       <div className="vl"></div>
 
-      <DropdownMenu></DropdownMenu>
+      <DropdownMenu closeMenu={closeMenu}></DropdownMenu>
     </>
   )
 
@@ -72,7 +93,7 @@ export default function NavBar() {
   )
 }
 
-const DropdownMenu = () => {
+const DropdownMenu = ({ closeMenu }) => {
   const location = useLocation()
   return (
     <>
@@ -82,18 +103,21 @@ const DropdownMenu = () => {
           <NavLink
             className={location.pathname === '/' ? 'nav__link__anchor-active' : null}
             href="/"
+            onClick={closeMenu}
           >
             Home
           </NavLink>
           <NavLink
             className={location.pathname === '/about' ? 'nav__link__anchor-active' : null}
             href="/about"
+            onClick={closeMenu}
           >
             About
           </NavLink>
           <NavLink
             className={location.pathname === '/user-guide' ? 'nav__link__anchor-active' : null}
             href="/user-guide"
+            onClick={closeMenu}
           >
             User Guide
           </NavLink>
@@ -103,7 +127,7 @@ const DropdownMenu = () => {
   )
 }
 
-const NavLink = ({ isAnchor, href, children, className }) => {
+const NavLink = ({ isAnchor, href, children, className, onClick }) => {
   const linkClass = clsx('nav__link__anchor', className)
 
   return (
@@ -117,13 +141,14 @@ const NavLink = ({ isAnchor, href, children, className }) => {
             if (el) {
               el.scrollIntoView()
             }
+            if (onClick) onClick()
           }}
           className={linkClass}
         >
           {children}
         </span>
       ) : (
-        <Link to={href} className={linkClass}>
+        <Link to={href} className={linkClass} onClick={onClick}>
           {children}
         </Link>
       )}
@@ -135,7 +160,8 @@ NavLink.propTypes = {
   isAnchor: PropTypes.bool,
   className: PropTypes.string,
   href: PropTypes.string.isRequired,
-  children: PropTypes.node
+  children: PropTypes.node,
+  onClick: PropTypes.func
 }
 
 const BurgerButton = ({ handleClick, menuOpen }) => {

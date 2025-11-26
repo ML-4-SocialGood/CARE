@@ -583,17 +583,40 @@ export async function browseDetectImage(
         // Step 3: Extract label and confidence from the corresponding JSON file
         const jsonData = await extractLabelAndConfidence(jsonFilePath)
         if (!jsonData) return null // Skip if the JSON cannot be read
-        const { label, confidence } = jsonData
+        let predictions = jsonData
+        predictions = predictions.filter((p) => p.label !== 'blank') // Filter out 'blank' labels
+        console.log('predictions: ', predictions)
 
         // Step 4: Filtering logic based on the query parameters
         const isLabelNoDetection = filterLabel === 'No Detection' // Check if filterLabel is the string "NoDetection"
+
+        // Check if label represents "no detection" - can be null, empty array, or array containing 'blank'
+        const labelIsNoDetection =
+          !predictions ||
+          predictions.length === 0 ||
+          (predictions[0] && predictions[0].label === null) ||
+          predictions.every((l) => l && l.label === 'blank')
+
+        // Keep the prediction array when one of the predictions has the filterLabel
         const isLabelMatch = isLabelNoDetection
-          ? label === null
-          : !filterLabel || label === filterLabel
+          ? labelIsNoDetection
+          : !filterLabel ||
+            (Array.isArray(predictions)
+              ? predictions.some((l) => l && l.label === filterLabel)
+              : predictions && predictions.label === filterLabel)
 
         // Apply confidence filtering only if filterLabel is not "null"
+        // keep the prediction array when one of the predictions has a confidence within the range
         const isConfidenceMatch =
-          !isLabelNoDetection && confidence >= confLow && confidence <= confHigh
+          !isLabelNoDetection &&
+          Array.isArray(predictions) &&
+          predictions.some(
+            (l) =>
+              l &&
+              typeof l.pred_conf === 'number' &&
+              l.pred_conf >= confLow &&
+              l.pred_conf <= confHigh
+          )
 
         if (isLabelMatch && (isLabelNoDetection || isConfidenceMatch)) {
           return { name: file, isDirectory: false, path: path.join(folderPath, file) }
@@ -616,11 +639,10 @@ async function extractLabelAndConfidence(filePath) {
     // Use fs-extra to read and parse JSON directly
     const jsonData = await fs.readJson(filePath)
 
-    // Extract the label and confidence from the first box
-    const label = jsonData.boxes[0].label
-    const confidence = jsonData.boxes[0].confidence
+    // Extract the predictions array from boxes
+    const predictions = jsonData.boxes || []
 
-    return { label, confidence }
+    return predictions // Return array directly
   } catch (error) {
     console.error('Error reading or parsing the file:', error)
     return null // If JSON cannot be read or parsed, return null to skip this file
@@ -663,20 +685,34 @@ async function getDetectFilePaths(
       )
 
       // Step 3: Extract label and confidence from the corresponding JSON file
-      const jsonData = await extractLabelAndConfidence(jsonFilePath)
-      if (jsonData) {
-        const { label, confidence } = jsonData
-
+      const predictions = await extractLabelAndConfidence(jsonFilePath)
+      if (predictions) {
         // Step 4: Filtering logic based on the query parameters
         const isLabelNoDetection = filterLabel === 'No Detection' // Check if filterLabel is the string "NoDetection"
+
+        // Check if label represents "no detection" - can be null, empty array, or array containing only 'blank'
+        const labelIsNoDetection =
+          !predictions ||
+          predictions.length === 0 ||
+          (predictions[0] && predictions[0].label === null) ||
+          predictions.every((l) => l && l.label === 'blank')
+
+        // keep the prediction array when one of the predictions has the filterLabel
         const isLabelMatch = isLabelNoDetection
-          ? label === null
-          : !filterLabel || label === filterLabel
-
+          ? labelIsNoDetection
+          : !filterLabel ||
+            (Array.isArray(predictions)
+              ? predictions.some((l) => l && l.label === filterLabel)
+              : predictions && predictions.label === filterLabel)
+        // console.log('isLabelMatch: ', isLabelMatch)
+        // console.log('filepath: ', filePath)
         // Apply confidence filtering only if filterLabel is not "null"
+        // keep the prediction array when one of the predictions has a confidence within the range
         const isConfidenceMatch =
-          !isLabelNoDetection && confidence >= confLow && confidence <= confHigh
-
+          !isLabelNoDetection &&
+          Array.isArray(predictions) &&
+          predictions.some((l) => l && l.confidence >= confLow && l.confidence <= confHigh)
+        // console.log('isConfidenceMatch: ', isConfidenceMatch)
         if (isLabelMatch && (isLabelNoDetection || isConfidenceMatch)) {
           const relativePath = path.relative(baseDir, filePath)
           results.push(relativePath)
@@ -684,7 +720,6 @@ async function getDetectFilePaths(
       }
     }
   }
-
   return results
 }
 

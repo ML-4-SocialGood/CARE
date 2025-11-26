@@ -176,7 +176,7 @@ export default function ImageUploader() {
     } else {
       dispatch(
         add_message({
-          message: `Not all files were added. Accepted file types are jpeg and png.`,
+          message: `Not all files were added. Accepted file type is jpeg.`,
           status: bannerStatuses.error
         })
       )
@@ -188,17 +188,20 @@ export default function ImageUploader() {
     const foldersToAdd = []
     for (let i = 0; i < e.target.files.length; i++) {
       const fileToAdd = e.target.files[i]
-      filesToAdd.push(fileToAdd)
 
-      const filePath = fileToAdd.webkitRelativePath // 返回的是 a/b.txt
-      const folder = filePath.substring(0, filePath.lastIndexOf('/')) // 这里我们需要获取该文件的真实路径，也就是 a， 所以我们需要去掉 /b.txt
-      const topFolder = folder.split('/')[0] // 获取顶级文件夹，如 'Stoat_Capital_Kiwi'
+      if (verifyImage(fileToAdd)) {
+        filesToAdd.push(fileToAdd)
 
-      if (!foldersToAdd.includes(topFolder)) {
-        foldersToAdd.push(topFolder) // 仅添加不重复的顶级文件夹
+        const filePath = fileToAdd.webkitRelativePath // 返回的是 a/b.txt
+        const folder = filePath.substring(0, filePath.lastIndexOf('/')) // 这里我们需要获取该文件的真实路径，也就是 a， 所以我们需要去掉 /b.txt
+        const topFolder = folder.split('/')[0] // 获取顶级文件夹，如 'Stoat_Capital_Kiwi'
+
+        if (!foldersToAdd.includes(topFolder)) {
+          foldersToAdd.push(topFolder) // 仅添加不重复的顶级文件夹
+        }
+
+        fileToAdd._webkitRelativePath = fileToAdd.webkitRelativePath
       }
-
-      fileToAdd._webkitRelativePath = fileToAdd.webkitRelativePath
     }
 
     console.log('Folders:', foldersToAdd) // 调试：查看文件夹是否被正确识别

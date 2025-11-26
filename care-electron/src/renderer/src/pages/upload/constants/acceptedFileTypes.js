@@ -1,3 +1,3 @@
 /** @format */
 
-export const acceptedFileTypes = ["image/jpeg", "image/png"];
+export const acceptedFileTypes = ["image/jpeg"];

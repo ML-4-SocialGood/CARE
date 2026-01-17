@@ -23,6 +23,8 @@ See [LICENSE](LICENSE) for more information.
 ## Contributors
 
 - [Yun Sing Koh](https://profiles.auckland.ac.nz/y-koh) (Professor at the School of Computer Science, University of Auckland)
+- [Gillian Dobbie](https://profiles.auckland.ac.nz/g-dobbie) (Professor at the School of Computer Science, University of Auckland)
+- [Daniel Wilson](https://profiles.auckland.ac.nz/daniel-wilson) (Lecturer at the School of Computer Science, University of Auckland)
 - [Di Zhao](https://www.linkedin.com/in/di-zhao-56869498/) (4th-Year PhD Student)
 - [Yihao Wu](https://www.linkedin.com/in/yihao-wu-justin327) (1st-Year PhD Student)
 - [Matthew Alajas](https://www.linkedin.com/in/matthew-alajas-79762a136/) (Master Student)
@@ -31,7 +33,7 @@ See [LICENSE](LICENSE) for more information.
 
 ## Collaborators & Acknowledgements
 
-We would like to extend our sincere gratitude to Professor [Gillian Dobbie](https://profiles.auckland.ac.nz/g-dobbie), Dr. [Daniel Wilson](https://profiles.auckland.ac.nz/daniel-wilson), [Te Korowai o Waiheke](https://tekorowaiowaiheke.org/), and Capstone Team 39 for their invaluable contributions to this project. Their dedication, collaboration, and technical expertise have been instrumental in driving our work forward. We are also deeply grateful to Te Korowai o Waiheke for their support and partnership, whose commitment to environmental stewardship and community well-being continues to inspire and enrich our efforts. This project would not have been possible without the combined efforts of these outstanding partners.
+We would like to extend our sincere gratitude to [Te Korowai o Waiheke](https://tekorowaiowaiheke.org/) and Capstone Team 39 for their invaluable contributions to this project. Their dedication, collaboration, and technical expertise have been instrumental in advancing our work. We are also deeply grateful to Te Korowai o Waiheke for their support and partnership, whose commitment to environmental stewardship and community well-being continues to inspire and enrich our efforts. This project would not have been possible without the combined efforts of these outstanding partners.
 
 ## Installer
 
